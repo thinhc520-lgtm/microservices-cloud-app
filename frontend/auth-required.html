@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cần đăng nhập - Sports Shop</title>
+    <!-- Font Awesome Icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+          Arial, sans-serif;
+      }
+
+      body {
+        background-color: #f5f5f5;
+        color: #333;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* Header phong cách Shopee */
+      .header {
+        background-color: #fff;
+        padding: 18px 40px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #f0f0f0;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+      }
+
+      .header-logo {
+        display: flex;
+        align-items: center;
+        text-decoration: none;
+        color: #ee4d2d;
+        font-size: 1.6rem;
+        font-weight: 700;
+        letter-spacing: -0.5px;
+      }
+
+      .header-logo i {
+        font-size: 1.8rem;
+        margin-right: 8px;
+      }
+
+      .header-help {
+        color: #ee4d2d;
+        text-decoration: none;
+        font-size: 0.95rem;
+        transition: opacity 0.2s;
+      }
+
+      .header-help:hover {
+        opacity: 0.8;
+        text-decoration: underline;
+      }
+
+      /* Main Container */
+      .main-container {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 20px 80px 20px;
+        text-align: center;
+      }
+
+      /* Icon tài liệu bị từ chối */
+      .error-graphic {
+        position: relative;
+        width: 110px;
+        height: 120px;
+        margin-bottom: 25px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .doc-icon {
+        font-size: 5.5rem;
+        color: #d8d8d8;
+      }
+
+      .lock-overlay {
+        position: absolute;
+        bottom: 2px;
+        right: 14px;
+        background: #fff;
+        border-radius: 50%;
+        padding: 4px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+      }
+
+      .lock-overlay i {
+        font-size: 1.6rem;
+        color: #999;
+      }
+
+      .title {
+        font-size: 1.25rem;
+        font-weight: 500;
+        color: #222;
+        margin-bottom: 10px;
+      }
+
+      .description {
+        font-size: 0.95rem;
+        color: #666;
+        line-height: 1.5;
+        max-width: 420px;
+        margin-bottom: 30px;
+      }
+
+      /* Các nút bấm thao tác */
+      .btn-group-custom {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        width: 100%;
+        max-width: 320px;
+      }
+
+      .btn {
+        display: block;
+        width: 100%;
+        padding: 12px 20px;
+        border-radius: 4px;
+        font-size: 0.95rem;
+        font-weight: 500;
+        text-align: center;
+        text-decoration: none;
+        cursor: pointer;
+        transition:
+          background-color 0.2s,
+          border-color 0.2s;
+        border: 1px solid transparent;
+      }
+
+      /* Nút màu cam Shopee */
+      .btn-primary {
+        background-color: #ee4d2d;
+        color: #fff;
+      }
+
+      .btn-primary:hover {
+        background-color: #d73211;
+      }
+
+      /* Nút viền cam */
+      .btn-outline {
+        background-color: #fff;
+        color: #ee4d2d;
+        border-color: #ee4d2d;
+      }
+
+      .btn-outline:hover {
+        background-color: #fffbf9;
+      }
+
+      /* Nút theo dõi đơn hàng */
+      .btn-tracking {
+        background-color: #fff;
+        color: #0d6efd;
+        border-color: #0d6efd;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+
+      .btn-tracking:hover {
+        background-color: #f0f7ff;
+      }
+
+      /* Footer Request ID */
+      .footer-id {
+        margin-top: 50px;
+        font-size: 0.8rem;
+        color: #9e9e9e;
+        letter-spacing: 0.5px;
+        font-family: monospace;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Header -->
+    <header class="header">
+      <a href="index.html" class="header-logo">
+        <i class="fa-solid fa-bag-shopping"></i>
+        <span>Sports Shop</span>
+      </a>
+      <a href="index.html#support" class="header-help"> Bạn cần giúp đỡ? </a>
+    </header>
+
+    <!-- Nội dung chính -->
+    <main class="main-container">
+      <!-- Đồ họa icon tài liệu khóa -->
+      <div class="error-graphic">
+        <i class="fa-regular fa-file-lines doc-icon"></i>
+        <div class="lock-overlay">
+          <i class="fa-solid fa-circle-xmark"></i>
+        </div>
+      </div>
+
+      <!-- Tiêu đề & mô tả -->
+      <h1 class="title">Cần đăng nhập</h1>
+      <p class="description">
+        Có vẻ như bạn chưa đăng nhập. Đăng nhập để tiếp tục hoặc quay lại trang
+        chủ.
+      </p>
+
+      <!-- Danh sách nút hành động -->
+      <div class="btn-group-custom">
+        <!-- Nút 1: Chuyển tới form đăng nhập -->
+        <a href="index.html?action=login" class="btn btn-primary">
+          Đăng nhập
+        </a>
+
+        <!-- Nút 2: Nút theo dõi vận chuyển đơn hàng (Không cần login) -->
+        <a href="tracking.html" class="btn btn-tracking">
+          <i class="fa-solid fa-truck-fast"></i>
+          Theo dõi đơn hàng
+        </a>
+
+        <!-- Nút 3: Trở về trang chủ -->
+        <a href="index.html" class="btn btn-outline"> Trở về trang chủ </a>
+      </div>
+
+      <!-- Mã Request Trace ID ngẫu nhiên giống Shopee -->
+      <div class="footer-id" id="trace-id">
+        ID: 24715289ad1-ef26-479e-9e1e-4398c21e66e2
+      </div>
+    </main>
+
+    <script>
+      // Tạo Trace ID ngẫu nhiên cho mỗi phiên truy cập
+      function generateTraceId() {
+        const hex = () => Math.random().toString(16).substring(2, 6);
+        const fullHex = () => Math.random().toString(16).substring(2, 14);
+        return `ID: ${fullHex()}-${hex()}-${hex()}-${hex()}-${fullHex()}`;
+      }
+      document.getElementById("trace-id").innerText = generateTraceId();
+    </script>
+  </body>
+</html>
