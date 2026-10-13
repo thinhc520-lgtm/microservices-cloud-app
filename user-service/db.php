@@ -1,8 +1,8 @@
 <?php
 $host = getenv('DB_HOST') ?: 'user-db';
 $db   = getenv('DB_NAME') ?: 'user_db';
-$user = getenv('DB_USER') ?: 'appuser';
-$pass = getenv('DB_PASS') ?: 'apppassword123';
+$user = getenv('DB_USER') ?: 'root';
+$pass = getenv('DB_PASS') ?: 'root';
 
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$db;charset=utf8mb4", $user, $pass, [
@@ -11,6 +11,11 @@ try {
     ]);
 } catch (PDOException $e) {
     http_response_code(500);
-    echo json_encode(["status" => "error", "message" => "Lỗi kết nối CSDL", "data" => null]);
+    // Trả về lỗi chi tiết từ MySQL để dễ debug
+    echo json_encode([
+        "status" => "error", 
+        "message" => "Lỗi kết nối CSDL: " . $e->getMessage(), 
+        "data" => null
+    ]);
     exit;
 }
