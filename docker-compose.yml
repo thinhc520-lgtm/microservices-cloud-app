@@ -1,0 +1,65 @@
+version: "3.8"
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  db_user_data:
+  db_product_data:
+  db_order_data:
+
+services:
+  # 1. CỔNG VÀO API GATEWAY (NGINX)
+  api-gateway:
+    image: nginx:alpine
+    container_name: nginx_gateway
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - frontend
+      - user-service
+      - product-service
+      - order-service
+    networks:
+      - app-network
+
+  # 2. FRONTEND
+  frontend:
+    build:
+      context: ./frontend
+    container_name: web_frontend
+    networks:
+      - app-network
+
+  # 3. USER SERVICE
+  user-service:
+    build:
+      context: ./user-service
+    container_name: app_user_service
+    environment:
+      - PORT=3001
+    networks:
+      - app-network
+
+  # 4. PRODUCT SERVICE
+  product-service:
+    build:
+      context: ./product-service
+    container_name: app_product_service
+    environment:
+      - PORT=3002
+    networks:
+      - app-network
+
+  # 5. ORDER SERVICE
+  order-service:
+    build:
+      context: ./order-service
+    container_name: app_order_service
+    environment:
+      - PORT=3003
+    networks:
+      - app-network
