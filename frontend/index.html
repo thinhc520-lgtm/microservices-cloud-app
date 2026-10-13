@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Cửa Hàng Thể Thao - Sports Shop</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 30px;
+        background-color: #f4f6f8;
+      }
+      h1 {
+        color: #2c3e50;
+      }
+      .container {
+        display: flex;
+        gap: 20px;
+      }
+      .box {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        flex: 1;
+      }
+      input,
+      button {
+        display: block;
+        width: 100%;
+        margin-bottom: 10px;
+        padding: 8px;
+        box-sizing: border-box;
+      }
+      button {
+        background-color: #27ae60;
+        color: white;
+        border: none;
+        cursor: pointer;
+        font-weight: bold;
+        border-radius: 4px;
+      }
+      button:hover {
+        background-color: #219150;
+      }
+      ul {
+        list-style-type: none;
+        padding: 0;
+      }
+      li {
+        padding: 10px;
+        border-bottom: 1px solid #ddd;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>⚽ Sports Shop - Microservices Dashboard</h1>
+
+    <div class="container">
+      <!-- 1. USER SERVICE -->
+      <div class="box">
+        <h3>1. Tài Khoản (User Service)</h3>
+        <input type="text" id="reg_username" placeholder="Tên đăng nhập" />
+        <input type="email" id="reg_email" placeholder="Email" />
+        <input type="password" id="reg_password" placeholder="Mật khẩu" />
+        <button onclick="register()">Đăng Ký</button>
+        <hr />
+        <input type="email" id="login_email" placeholder="Email đăng nhập" />
+        <input type="password" id="login_password" placeholder="Mật khẩu" />
+        <button onclick="login()">Đăng Nhập</button>
+        <p id="user_status" style="color: blue; font-weight: bold"></p>
+      </div>
+
+      <!-- 2. PRODUCT SERVICE -->
+      <div class="box">
+        <h3>2. Danh Sách Sản Phẩm (Product Service)</h3>
+        <button onclick="loadProducts()">Tải Danh Sách Sản Phẩm</button>
+        <ul id="product_list"></ul>
+      </div>
+
+      <!-- 3. ORDER SERVICE -->
+      <div class="box">
+        <h3>3. Mua Hàng (Order Service)</h3>
+        <input type="number" id="order_user_id" placeholder="User ID" />
+        <input type="number" id="order_product_id" placeholder="Product ID" />
+        <input
+          type="number"
+          id="order_quantity"
+          placeholder="Số lượng"
+          value="1"
+        />
+        <button onclick="createOrder()">Tạo Đơn Hàng</button>
+        <p id="order_result" style="color: green; font-weight: bold"></p>
+      </div>
+    </div>
+
+    <script>
+      // 1. Đăng ký tài khoản
+      async function register() {
+        try {
+          const res = await fetch("/api/users/register", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              username: document.getElementById("reg_username").value,
+              email: document.getElementById("reg_email").value,
+              password: document.getElementById("reg_password").value,
+            }),
+          });
+          const data = await res.json();
+          document.getElementById("user_status").innerText =
+            data.message || "Đã gửi yêu cầu";
+        } catch (e) {
+          document.getElementById("user_status").innerText =
+            "Lỗi kết nối User Service!";
+        }
+      }
+
+      // 2. Đăng nhập
+      async function login() {
+        try {
+          const res = await fetch("/api/users/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email: document.getElementById("login_email").value,
+              password: document.getElementById("login_password").value,
+            }),
+          });
+          const data = await res.json();
+          if (data.status === "success" || res.ok) {
+            document.getElementById("user_status").innerText =
+              "Đã đăng nhập: " + (data.data?.username || "Thành công");
+            if (data.data?.id)
+              document.getElementById("order_user_id").value = data.data.id;
+          } else {
+            document.getElementById("user_status").innerText =
+              data.message || "Đăng nhập thất bại";
+          }
+        } catch (e) {
+          document.getElementById("user_status").innerText =
+            "Lỗi kết nối User Service!";
+        }
+      }
+
+      // 3. Tải danh sách sản phẩm
+      async function loadProducts() {
+        try {
+          const res = await fetch("/api/products");
+          const data = await res.json();
+          const list = document.getElementById("product_list");
+          list.innerHTML = "";
+          const items = data.data || data;
+          if (Array.isArray(items) && items.length > 0) {
+            items.forEach((p) => {
+              list.innerHTML += `<li><b>[ID: ${p.id}] ${p.name}</b> - Giá: ${Number(p.price).toLocaleString()}đ (Kho: ${p.stock})</li>`;
+            });
+          } else {
+            list.innerHTML = "<li>Chưa có sản phẩm nào.</li>";
+          }
+        } catch (e) {
+          document.getElementById("product_list").innerHTML =
+            '<li style="color:red">Lỗi tải sản phẩm!</li>';
+        }
+      }
+
+      // 4. Tạo đơn hàng
+      async function createOrder() {
+        try {
+          const res = await fetch("/api/orders", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              user_id: parseInt(document.getElementById("order_user_id").value),
+              items: [
+                {
+                  product_id: parseInt(
+                    document.getElementById("order_product_id").value,
+                  ),
+                  quantity: parseInt(
+                    document.getElementById("order_quantity").value,
+                  ),
+                },
+              ],
+            }),
+          });
+          const data = await res.json();
+          document.getElementById("order_result").innerText =
+            data.message || "Đặt hàng thành công!";
+        } catch (e) {
+          document.getElementById("order_result").innerText =
+            "Lỗi kết nối Order Service!";
+        }
+      }
+
+      // Tự động load sản phẩm khi vừa mở trang
+      window.onload = loadProducts;
+    </script>
+  </body>
+</html>

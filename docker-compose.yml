@@ -10,7 +10,7 @@ volumes:
   db_order_data:
 
 services:
-  # 1. CỔNG VÀO API GATEWAY (NGINX)
+  # CỔNG VÀO CHÍNH (API GATEWAY)
   api-gateway:
     image: nginx:alpine
     container_name: nginx_gateway
@@ -26,7 +26,7 @@ services:
     networks:
       - app-network
 
-  # 2. FRONTEND
+  # FRONTEND
   frontend:
     build:
       context: ./frontend
@@ -34,32 +34,65 @@ services:
     networks:
       - app-network
 
-  # 3. USER SERVICE
+  # USER SERVICE & DB
   user-service:
     build:
       context: ./user-service
     container_name: app_user_service
-    environment:
-      - PORT=3001
+    depends_on:
+      - user-db
     networks:
       - app-network
 
-  # 4. PRODUCT SERVICE
+  user-db:
+    image: mysql:8.0
+    container_name: db_user_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: user_db
+    volumes:
+      - db_user_data:/var/lib/mysql
+    networks:
+      - app-network
+
+  # PRODUCT SERVICE & DB
   product-service:
     build:
       context: ./product-service
     container_name: app_product_service
-    environment:
-      - PORT=3002
+    depends_on:
+      - product-db
     networks:
       - app-network
 
-  # 5. ORDER SERVICE
+  product-db:
+    image: mysql:8.0
+    container_name: db_product_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: product_db
+    volumes:
+      - db_product_data:/var/lib/mysql
+    networks:
+      - app-network
+
+  # ORDER SERVICE & DB
   order-service:
     build:
       context: ./order-service
     container_name: app_order_service
+    depends_on:
+      - order-db
+    networks:
+      - app-network
+
+  order-db:
+    image: mysql:8.0
+    container_name: db_order_mysql
     environment:
-      - PORT=3003
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: order_db
+    volumes:
+      - db_order_data:/var/lib/mysql
     networks:
       - app-network
