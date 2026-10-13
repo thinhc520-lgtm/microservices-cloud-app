@@ -6,28 +6,41 @@ $method = $_SERVER['REQUEST_METHOD'];
 $input  = json_decode(file_get_contents('php://input'), true);
 
 if ($method === 'POST') {
-    if (empty($input['user_id']) || empty($input['product_id']) || empty($input['quantity'])) {
+    // 1. Tự động nhận diện cả 2 định dạng:
+    // - Dạng trực tiếp từ Postman: { user_id, product_id, quantity }
+    // - Dạng lồng mảng từ Frontend của Thịnh: { user_id, items: [{ product_id, quantity }] }
+    $userId    = $input['user_id'] ?? null;
+    $productId = $input['product_id'] ?? ($input['items'][0]['product_id'] ?? null);
+    $quantity  = $input['quantity'] ?? ($input['items'][0]['quantity'] ?? 1);
+
+    if (empty($userId) || empty($productId) || empty($quantity)) {
         http_response_code(400);
         echo json_encode(["status" => "error", "message" => "Thiếu thông tin đặt hàng", "data" => null]);
         exit;
     }
 
-    $userId    = $input['user_id'];
-    $productId = $input['product_id'];
-    $quantity  = (int)$input['quantity'];
+    $userId    = (int)$userId;
+    $productId = (int)$productId;
+    $quantity  = (int)$quantity;
 
-    // 1. Gọi sang User Service kiểm tra user có tồn tại không
-    $userRes = @file_get_contents("http://user-service/$userId");
+    // 2. Gọi sang User Service kiểm tra user (thêm fallback index.php tránh lỗi rewrite Apache)
+    $userRes = @file_get_contents("http://user-service/index.php/$userId");
+    if (!$userRes) {
+        $userRes = @file_get_contents("http://user-service/$userId");
+    }
     if (!$userRes) {
         http_response_code(400);
         echo json_encode(["status" => "error", "message" => "Tài khoản không tồn tại hoặc User Service gặp sự cố", "data" => null]);
         exit;
     }
 
-    // 2. Gọi sang Product Service kiểm tra sản phẩm và số lượng tồn kho
-    $prodRes = @file_get_contents("http://product-service/$productId");
+    // 3. Gọi sang Product Service kiểm tra sản phẩm và tồn kho
+    $prodRes = @file_get_contents("http://product-service/index.php/$productId");
+    if (!$prodRes) {
+        $prodRes = @file_get_contents("http://product-service/$productId");
+    }
     $prodData = json_decode($prodRes, true);
-    if (!$prodData || $prodData['status'] !== 'success') {
+    if (!$prodData || $prodData['status'] !== 'success' || empty($prodData['data'])) {
         http_response_code(400);
         echo json_encode(["status" => "error", "message" => "Sản phẩm không tồn tại", "data" => null]);
         exit;
@@ -36,24 +49,29 @@ if ($method === 'POST') {
     $product = $prodData['data'];
     if ($product['stock'] < $quantity) {
         http_response_code(400);
-        echo json_encode(["status" => "error", "message" => "Số lượng tồn kho không đủ", "data" => null]);
+        echo json_encode(["status" => "error", "message" => "Số lượng tồn kho không đủ (Hiện còn: " . $product['stock'] . ")", "data" => null]);
         exit;
     }
 
-    // 3. Tính tổng tiền và lưu vào order_db (khớp cột status của bạn)
+    // 4. Tính tổng tiền và lưu vào order_db
     $totalPrice = $product['price'] * $quantity;
-    $stmt = $pdo->prepare("INSERT INTO orders (user_id, product_id, quantity, total_price, status) VALUES (?, ?, ?, ?, 'COMPLETED')");
-    $stmt->execute([$userId, $productId, $quantity, $totalPrice]);
+    try {
+        $stmt = $pdo->prepare("INSERT INTO orders (user_id, product_id, quantity, total_price, status) VALUES (?, ?, ?, ?, 'COMPLETED')");
+        $stmt->execute([$userId, $productId, $quantity, $totalPrice]);
 
-    echo json_encode([
-        "status" => "success",
-        "message" => "Đặt hàng thành công",
-        "data" => [
-            "order_id"    => $pdo->lastInsertId(),
-            "total_price" => $totalPrice,
-            "status"      => "COMPLETED"
-        ]
-    ]);
+        echo json_encode([
+            "status"  => "success",
+            "message" => "Đặt hàng thành công",
+            "data"    => [
+                "order_id"    => $pdo->lastInsertId(),
+                "total_price" => $totalPrice,
+                "status"      => "COMPLETED"
+            ]
+        ]);
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode(["status" => "error", "message" => "Lỗi lưu đơn hàng: " . $e->getMessage(), "data" => null]);
+    }
     exit;
 }
 
