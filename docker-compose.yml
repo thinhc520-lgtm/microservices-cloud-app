@@ -59,7 +59,7 @@ services:
   product-service:
     build:
       context: ./product-service
-    container_name: app_product_service
+    #container_name: app_product_service
     depends_on:
       - product-db
     networks:
