@@ -122,7 +122,10 @@
                     <i class="fa-solid fa-crown text-warning"></i>
                     <span id="loyalty-status">Hội viên: 0 Điểm</span>
                 </span>
-
+                <a href="admin.html" class="border-start ps-3 text-warning text-decoration-none fw-semibold d-flex align-items-center gap-1">
+                    <i class="fa-solid fa-gauge-high"></i>
+                    <span>Trang Admin</span>
+                </a>
                 <!-- Đăng ký / Đăng nhập hoặc Tên User -->
                 <div class="border-start ps-3" id="auth-nav-area">
                     <a href="#" class="me-2" data-bs-toggle="modal" data-bs-target="#authModal" onclick="setAuthTab('login')">
@@ -856,31 +859,51 @@
         }
 
         async function handleLoginSubmit(e) {
-            e.preventDefault();
-            const username = document.getElementById('auth-login-user').value;
-            const password = document.getElementById('auth-login-pass').value;
+    e.preventDefault();
+    const usernameInput = document.getElementById('auth-login-user') || document.getElementById('auth-user');
+    const passwordInput = document.getElementById('auth-login-pass') || document.getElementById('auth-pass');
 
-            try {
-                const res = await fetch('/api/users/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password })
-                });
-                const data = await res.json();
-                if (res.ok) {
-                    currentUser = data.data || { id: 1, username: username };
-                    loyaltyPoints = 120;
-                    updateUserDisplay();
-                    alert(`Đăng nhập thành công! Xin chào ${currentUser.username}`);
-                    const modal = bootstrap.Modal.getInstance(document.getElementById('authModal'));
-                    if (modal) modal.hide();
-                } else {
-                    alert(data.message || "Sai tên đăng nhập hoặc mật khẩu!");
-                }
-            } catch (err) {
-                alert("Không thể kết nối đến User Service!");
+    const username = usernameInput ? usernameInput.value.trim() : '';
+    const password = passwordInput ? passwordInput.value : '';
+
+    if (!username || !password) {
+        alert("Vui lòng nhập đầy đủ tên tài khoản và mật khẩu!");
+        return;
+    }
+
+    try {
+        const res = await fetch('/api/users/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        
+        const data = await res.json();
+
+        if (res.ok) {
+            // Lấy thông tin user trả về từ backend
+            const user = data.user || data;
+
+            // Lưu phiên đăng nhập vào LocalStorage của trình duyệt
+            localStorage.setItem('currentUser', JSON.stringify(user));
+
+            // KIỂM TRA PHÂN QUYỀN:
+            if (user.role === 'ADMIN') {
+                alert("Đăng nhập tài khoản Quản trị viên thành công! Đang chuyển đến trang Admin...");
+                window.location.href = 'admin.html'; // Chuyển thẳng sang trang Admin
+            } else {
+                alert("Đăng nhập thành công! Chào mừng " + (user.full_name || user.username));
+                // Nếu là khách hàng bình thường: đóng modal hoặc tải lại trang
+                window.location.reload();
             }
+        } else {
+            alert(data.message || "Tên tài khoản hoặc mật khẩu không chính xác!");
         }
+    } catch (err) {
+        console.error("Lỗi đăng nhập:", err);
+        alert("Không thể kết nối đến User Service!");
+    }
+}
 
         // 2. Hàm xử lý Đăng ký tài khoản mới
 async function handleRegisterSubmit(e) {
