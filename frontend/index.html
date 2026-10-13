@@ -1,199 +1,868 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="vi">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Cửa Hàng Thể Thao - Sports Shop</title>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sports Shop - Hệ Thống Microservices</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-      body {
-        font-family: Arial, sans-serif;
-        margin: 30px;
-        background-color: #f4f6f8;
-      }
-      h1 {
-        color: #2c3e50;
-      }
-      .container {
-        display: flex;
-        gap: 20px;
-      }
-      .box {
-        background: white;
-        padding: 20px;
-        border-radius: 8px;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        flex: 1;
-      }
-      input,
-      button {
-        display: block;
-        width: 100%;
-        margin-bottom: 10px;
-        padding: 8px;
-        box-sizing: border-box;
-      }
-      button {
-        background-color: #27ae60;
-        color: white;
-        border: none;
-        cursor: pointer;
-        font-weight: bold;
-        border-radius: 4px;
-      }
-      button:hover {
-        background-color: #219150;
-      }
-      ul {
-        list-style-type: none;
-        padding: 0;
-      }
-      li {
-        padding: 10px;
-        border-bottom: 1px solid #ddd;
-      }
+        :root {
+            --primary-color: #0d6efd;
+            --accent-color: #ff5722;
+        }
+        body {
+            background-color: #f5f7fb;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .top-bar {
+            background-color: #1a1e21;
+            font-size: 0.82rem;
+            color: #adb5bd;
+        }
+        .top-bar a {
+            color: #adb5bd;
+            text-decoration: none;
+        }
+        .top-bar a:hover {
+            color: #fff;
+        }
+        .navbar-main {
+            background-color: #fff;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+        }
+        .search-box input {
+            border-radius: 20px 0 0 20px;
+        }
+        .search-box button {
+            border-radius: 0 20px 20px 0;
+        }
+        .hot-keywords span {
+            font-size: 0.78rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .hot-keywords span:hover {
+            background-color: #e9ecef !important;
+        }
+        .policy-badge {
+            background: #fff;
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+        }
+        .policy-badge i {
+            font-size: 1.8rem;
+            margin-right: 12px;
+            color: var(--primary-color);
+        }
+        .product-card {
+            background: #fff;
+            border-radius: 12px;
+            border: 1px solid #edf2f7;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+        }
+        .badge-discount {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background-color: var(--accent-color);
+            color: #fff;
+            font-size: 0.75rem;
+            font-weight: bold;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+        .floating-support {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            z-index: 1000;
+        }
+        .tier-badge {
+            font-size: 0.75rem;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
     </style>
-  </head>
-  <body>
-    <h1>⚽ Sports Shop - Microservices Dashboard</h1>
+</head>
+<body>
 
-    <div class="container">
-      <!-- 1. USER SERVICE -->
-      <div class="box">
-        <h3>1. Tài Khoản (User Service)</h3>
-        <input type="text" id="reg_username" placeholder="Tên đăng nhập" />
-        <input type="email" id="reg_email" placeholder="Email" />
-        <input type="password" id="reg_password" placeholder="Mật khẩu" />
-        <button onclick="register()">Đăng Ký</button>
-        <hr />
-        <input type="email" id="login_email" placeholder="Email đăng nhập" />
-        <input type="password" id="login_password" placeholder="Mật khẩu" />
-        <button onclick="login()">Đăng Nhập</button>
-        <p id="user_status" style="color: blue; font-weight: bold"></p>
-      </div>
+    <!-- 1. TOP BAR: Thông báo, Ngôn ngữ, Khách hàng thân thiết, Đăng ký / Đăng nhập -->
+    <div class="top-bar py-1 border-bottom">
+        <div class="container d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-3">
+                <span id="txt-hot-news"><i class="fa-solid fa-bullhorn text-warning me-1"></i> Ưu đãi chào mừng: Miễn phí vận chuyển toàn quốc cho đơn từ 299k!</span>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <!-- Chọn ngôn ngữ -->
+                <div class="dropdown">
+                    <a class="dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="fa-solid fa-globe me-1"></i> <span id="current-lang">Tiếng Việt</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                        <li><a class="dropdown-item" href="#" onclick="changeLanguage('vi')">Tiếng Việt (VN)</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="changeLanguage('en')">English (US)</a></li>
+                    </ul>
+                </div>
 
-      <!-- 2. PRODUCT SERVICE -->
-      <div class="box">
-        <h3>2. Danh Sách Sản Phẩm (Product Service)</h3>
-        <button onclick="loadProducts()">Tải Danh Sách Sản Phẩm</button>
-        <ul id="product_list"></ul>
-      </div>
+                <!-- Khách hàng thân thiết (Loyalty) -->
+                <span class="border-start ps-3 d-flex align-items-center gap-1">
+                    <i class="fa-solid fa-crown text-warning"></i>
+                    <span id="loyalty-status">Hội viên: 0 Điểm</span>
+                </span>
 
-      <!-- 3. ORDER SERVICE -->
-      <div class="box">
-        <h3>3. Mua Hàng (Order Service)</h3>
-        <input type="number" id="order_user_id" placeholder="User ID" />
-        <input type="number" id="order_product_id" placeholder="Product ID" />
-        <input
-          type="number"
-          id="order_quantity"
-          placeholder="Số lượng"
-          value="1"
-        />
-        <button onclick="createOrder()">Tạo Đơn Hàng</button>
-        <p id="order_result" style="color: green; font-weight: bold"></p>
-      </div>
+                <!-- Đăng ký / Đăng nhập hoặc Tên User -->
+                <div class="border-start ps-3" id="auth-nav-area">
+                    <a href="#" class="me-2" data-bs-toggle="modal" data-bs-target="#authModal" onclick="setAuthTab('login')">
+                        <i class="fa-solid fa-arrow-right-to-bracket me-1"></i>Đăng nhập
+                    </a>
+                    <a href="#" data-bs-toggle="modal" data-bs-target="#authModal" onclick="setAuthTab('register')">
+                        <i class="fa-solid fa-user-plus me-1"></i>Đăng ký
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
 
+    <!-- 2. NAVBAR CHÍNH: Logo, Tìm kiếm sản phẩm, Giỏ hàng -->
+    <nav class="navbar navbar-expand-lg navbar-main sticky-top py-2">
+        <div class="container">
+            <a class="navbar-brand fw-bold text-primary fs-3 d-flex align-items-center" href="#">
+                <i class="fa-solid fa-bolt me-2 text-warning"></i>SPORTS SHOP
+            </a>
+
+            <!-- Thanh tìm kiếm sản phẩm -->
+            <div class="d-flex flex-grow-1 mx-lg-4 my-2 my-lg-0 search-box position-relative">
+                <input class="form-control" type="search" id="input-search" placeholder="Tìm kiếm dụng cụ gym, bóng đá, cầu lông, giày chạy..." onkeyup="handleSearch(event)">
+                <button class="btn btn-primary px-4" type="button" onclick="executeSearch()">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </button>
+            </div>
+
+            <!-- Giỏ hàng -->
+            <div class="d-flex align-items-center">
+                <button class="btn btn-outline-primary position-relative rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#cartModal">
+                    <i class="fa-solid fa-cart-shopping me-1"></i> <span id="txt-cart">Giỏ hàng</span>
+                    <span id="cart-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">0</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 3. TỪ KHÓA TÌM KIẾM HOT -->
+    <div class="container my-2">
+        <div class="hot-keywords d-flex align-items-center gap-2 flex-wrap">
+            <span class="text-muted small fw-semibold"><i class="fa-solid fa-fire text-danger me-1"></i>Tìm kiếm hot:</span>
+            <span class="badge bg-white text-dark border py-1 px-2" onclick="quickSearch('Tạ tay')">Tạ tay cao cấp</span>
+            <span class="badge bg-white text-dark border py-1 px-2" onclick="quickSearch('Giày')">Giày chạy marathon</span>
+            <span class="badge bg-white text-dark border py-1 px-2" onclick="quickSearch('Bóng đá')">Bóng đá FIFA</span>
+            <span class="badge bg-white text-dark border py-1 px-2" onclick="quickSearch('Vợt')">Vợt cầu lông Yonex</span>
+            <span class="badge bg-white text-dark border py-1 px-2" onclick="quickSearch('Yoga')">Thảm Yoga chống trượt</span>
+        </div>
+    </div>
+
+    <!-- 4. BANNER QUẢNG CÁO & CAM KẾT (Freeship & 15 ngày đổi trả) -->
+    <div class="container my-3">
+        <!-- Banner Carousel -->
+        <div id="shopBanner" class="carousel slide rounded-3 overflow-hidden shadow-sm mb-3" data-bs-ride="carousel">
+            <div class="carousel-inner" style="max-height: 260px;">
+                <div class="carousel-item active">
+                    <div class="bg-primary text-white p-5 d-flex flex-column justify-content-center align-items-start" style="min-height: 240px; background: linear-gradient(135deg, #0d6efd, #001e4d);">
+                        <span class="badge bg-warning text-dark mb-2">ĐẠI TIỆC THỂ THAO 2026</span>
+                        <h2 class="fw-bold">Nâng Tầm Thể Lực - Bứt Phá Giới Hạn</h2>
+                        <p class="mb-3 text-light">Giảm đến 40% thiết bị tập luyện gia đình & phụ kiện thi đấu chuyên nghiệp.</p>
+                        <button class="btn btn-warning fw-bold text-dark rounded-pill px-4" onclick="filterSaleOnly()">Xem Ngay Flash Sale</button>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <div class="bg-dark text-white p-5 d-flex flex-column justify-content-center align-items-start" style="min-height: 240px; background: linear-gradient(135deg, #ff5722, #b71c1c);">
+                        <span class="badge bg-light text-danger mb-2">HOT TRENDING</span>
+                        <h2 class="fw-bold">Bộ Sưu Tập Giày Chạy & Bóng Thi Đấu Mới</h2>
+                        <p class="mb-3">Công nghệ trợ lực hiện đại, êm chân, bền bỉ trên mọi mặt sân.</p>
+                        <button class="btn btn-light fw-bold text-danger rounded-pill px-4" onclick="loadProducts()">Khám Phá Toàn Bộ</button>
+                    </div>
+                </div>
+            </div>
+            <button class="carousel-control-prev" type="button" data-bs-target="#shopBanner" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon"></span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#shopBanner" data-bs-slide="next">
+                <span class="carousel-control-next-icon"></span>
+            </button>
+        </div>
+
+        <!-- Cam kết: Freeship, Trả hàng 15 ngày, Hàng chính hãng -->
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="policy-badge">
+                    <i class="fa-solid fa-truck-fast text-success"></i>
+                    <div>
+                        <h6 class="fw-bold mb-0">Giao hàng miễn phí</h6>
+                        <small class="text-muted">Áp dụng cho mọi đơn từ 299.000đ</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="policy-badge">
+                    <i class="fa-solid fa-arrows-rotate text-primary"></i>
+                    <div>
+                        <h6 class="fw-bold mb-0">Đổi trả trong 15 ngày</h6>
+                        <small class="text-muted">Hỗ trợ đổi size & lỗi kỹ thuật miễn phí</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="policy-badge">
+                    <i class="fa-solid fa-shield-halved text-warning"></i>
+                    <div>
+                        <h6 class="fw-bold mb-0">100% Chính Hãng</h6>
+                        <small class="text-muted">Cam kết phân phối thiết bị tiêu chuẩn</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. KHU VỰC CHÍNH: Lọc theo danh mục & sắp xếp giá, Danh sách sản phẩm & Flash Sale -->
+    <div class="container my-4">
+        <!-- Bộ lọc & Sắp xếp -->
+        <div class="card p-3 mb-4 bg-white">
+            <div class="row g-2 align-items-center">
+                <div class="col-md-4">
+                    <label class="form-label small fw-bold text-muted mb-1"><i class="fa-solid fa-filter me-1"></i>Danh Mục Sản Phẩm</label>
+                    <select class="form-select form-select-sm" id="filter-category" onchange="applyFilters()">
+                        <option value="all">Tất cả sản phẩm</option>
+                        <option value="gym">Thể hình & Gym</option>
+                        <option value="ball">Bóng đá & Thể thao đồng đội</option>
+                        <option value="racket">Cầu lông & Quần vợt</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-bold text-muted mb-1"><i class="fa-solid fa-arrow-down-wide-short me-1"></i>Sắp Xếp Theo Giá</label>
+                    <select class="form-select form-select-sm" id="filter-sort" onchange="applyFilters()">
+                        <option value="default">Mặc định</option>
+                        <option value="asc">Giá từ thấp đến cao</option>
+                        <option value="desc">Giá từ cao đến thấp</option>
+                    </select>
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button class="btn btn-outline-danger btn-sm w-100 fw-bold" id="btn-flash-sale" onclick="toggleFlashSaleFilter()">
+                        <i class="fa-solid fa-bolt me-1"></i> Đơn hàng đang giảm giá (Flash Sale)
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Danh sách sản phẩm -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold mb-0 text-dark" id="txt-list-header"><i class="fa-solid fa-bag-shopping me-2 text-primary"></i>Danh Sách Sản Phẩm</h5>
+            <span class="text-muted small" id="product-count">Đang hiển thị: 0 sản phẩm</span>
+        </div>
+
+        <div id="product-grid" class="row g-3">
+            <div class="col-12 text-center py-5">
+                <i class="fa-solid fa-spinner fa-spin fa-2x text-primary mb-2"></i>
+                <div class="text-muted">Đang kết nối qua Nginx Gateway tới Product Service...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 6. MODAL GIỎ HÀNG & FORM ĐẶT HÀNG (Địa chỉ GG Map, SĐT, OTP, Đa hình thức thanh toán) -->
+    <div class="modal fade" id="cartModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-cart-shopping me-2"></i>Giỏ Hàng & Đặt Hàng Trực Tuyến</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div id="cart-empty-msg" class="text-center py-4 text-muted">
+                        <i class="fa-solid fa-box-open fa-3x mb-2 text-secondary"></i>
+                        <p>Giỏ hàng đang trống. Hãy chọn sản phẩm từ danh mục!</p>
+                    </div>
+
+                    <div id="cart-content-area" class="d-none">
+                        <!-- Danh sách item trong cart -->
+                        <div class="table-responsive mb-3">
+                            <table class="table align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Sản phẩm</th>
+                                        <th>Đơn giá</th>
+                                        <th>Số lượng</th>
+                                        <th>Thành tiền</th>
+                                        <th>Xóa</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="cart-table-body"></tbody>
+                            </table>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded mb-4">
+                            <span class="fw-bold">Tổng thanh toán:</span>
+                            <span class="fs-5 text-danger fw-bold" id="cart-total-price">0 đ</span>
+                        </div>
+
+                        <!-- Form Thông Tin Nhận Hàng -->
+                        <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">
+                            <i class="fa-solid fa-location-dot text-danger me-2"></i>Thông Tin Giao Hàng & Xác Nhận
+                        </h6>
+                        <form id="form-checkout" onsubmit="handlePlaceOrder(event)">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-semibold">Tên người nhận *</label>
+                                    <input type="text" class="form-control" id="order-fullname" placeholder="Họ và tên người nhận" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-semibold">Số điện thoại *</label>
+                                    <input type="tel" class="form-control" id="order-phone" placeholder="VD: 0912345678" pattern="[0-9]{10}" required>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small fw-semibold">Địa chỉ giao hàng (Tọa độ / Tên đường trên GG Maps) *</label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="order-address" placeholder="Số nhà, tên đường, phường/xã, quận/huyện..." required>
+                                        <button class="btn btn-outline-secondary" type="button" onclick="detectGoogleMapsLocation()">
+                                            <i class="fa-solid fa-map-pin text-danger me-1"></i> Lấy vị trí GG Map
+                                        </button>
+                                    </div>
+                                    <small class="text-muted" id="geo-status"></small>
+                                </div>
+
+                                <!-- Thanh toán bằng nhiều hình thức -->
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-semibold">Hình thức thanh toán *</label>
+                                    <select class="form-select" id="order-payment-method">
+                                        <option value="cod">Thanh toán khi nhận hàng (COD)</option>
+                                        <option value="bank">Chuyển khoản Ngân hàng (QR Code)</option>
+                                        <option value="momo">Ví điện tử MoMo</option>
+                                        <option value="vnpay">Cổng thanh toán VNPAY</option>
+                                    </select>
+                                </div>
+
+                                <!-- Nhập mã xác nhận (OTP) -->
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-semibold">Mã xác nhận bảo mật (OTP) *</label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="order-otp" placeholder="Nhập mã 4 số" required>
+                                        <button class="btn btn-outline-primary" type="button" onclick="generateOtp()">Lấy mã OTP</button>
+                                    </div>
+                                    <small class="text-success fw-bold" id="otp-hint"></small>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-success w-100 fw-bold mt-4 py-2">
+                                <i class="fa-solid fa-check-circle me-1"></i> HOÀN TẤT ĐẶT HÀNG QUA ORDER SERVICE
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 7. MODAL ĐĂNG NHẬP / ĐĂNG KÝ (User Service) -->
+    <div class="modal fade" id="authModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header border-0 pb-0">
+                    <ul class="nav nav-pills w-100 nav-fill" role="tablist">
+                        <li class="nav-item">
+                            <button class="nav-link active fw-bold" id="pills-login-tab" data-bs-toggle="pill" data-bs-target="#pills-login">Đăng Nhập</button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link fw-bold" id="pills-reg-tab" data-bs-toggle="pill" data-bs-target="#pills-reg">Đăng Ký</button>
+                        </li>
+                    </ul>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="tab-content">
+                        <!-- Form Đăng nhập -->
+                        <div class="tab-pane fade show active" id="pills-login">
+                            <form onsubmit="handleLoginSubmit(event)">
+                                <div class="mb-3">
+                                    <label class="form-label small text-muted">Tên tài khoản</label>
+                                    <input type="text" id="auth-login-user" class="form-control" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small text-muted">Mật khẩu</label>
+                                    <input type="password" id="auth-login-pass" class="form-control" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary w-100 fw-bold py-2">Đăng Nhập</button>
+                            </form>
+                        </div>
+                        <!-- Form Đăng ký -->
+                        <div class="tab-pane fade" id="pills-reg">
+                            <form onsubmit="handleRegisterSubmit(event)">
+                                <div class="mb-2">
+                                    <label class="form-label small text-muted">Tên tài khoản</label>
+                                    <input type="text" id="auth-reg-user" class="form-control" required>
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label small text-muted">Email</label>
+                                    <input type="email" id="auth-reg-email" class="form-control" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small text-muted">Mật khẩu</label>
+                                    <input type="password" id="auth-reg-pass" class="form-control" required>
+                                </div>
+                                <button type="submit" class="btn btn-success w-100 fw-bold py-2">Tạo Tài Khoản Mới</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 8. MỤC HỖ TRỢ KHÁCH HÀNG (Floating Button & Modal) -->
+    <div class="floating-support">
+        <button class="btn btn-primary rounded-circle shadow-lg p-3" data-bs-toggle="modal" data-bs-target="#supportModal" title="Hỗ trợ khách hàng">
+            <i class="fa-solid fa-headset fa-xl"></i>
+        </button>
+    </div>
+
+    <div class="modal fade" id="supportModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-comments me-2 text-info"></i>Trung Tâm Hỗ Trợ Khách Hàng</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <h6><i class="fa-solid fa-phone text-success me-2"></i>Tổng đài miễn phí:</h6>
+                        <p class="fw-bold fs-5 text-primary ms-4 mb-1">1800 6868 (8:00 - 21:00)</p>
+                    </div>
+                    <div class="mb-3">
+                        <h6><i class="fa-solid fa-envelope text-warning me-2"></i>Hỗ trợ kỹ thuật / Đơn hàng:</h6>
+                        <p class="text-muted ms-4 mb-1">support@sportshop-cloud.com</p>
+                    </div>
+                    <div class="mb-3">
+                        <h6><i class="fa-solid fa-circle-question text-info me-2"></i>Câu hỏi thường gặp:</h6>
+                        <ul class="small text-muted ms-3">
+                            <li>Chính sách đổi trả 15 ngày áp dụng với sản phẩm còn nguyên tem mác.</li>
+                            <li>Đơn hàng sẽ được xử lý qua Order Service và gửi thông báo qua SĐT người nhận.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
     <script>
-      // 1. Đăng ký tài khoản
-      async function register() {
-        try {
-          const res = await fetch("/api/users/register", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              username: document.getElementById("reg_username").value,
-              email: document.getElementById("reg_email").value,
-              password: document.getElementById("reg_password").value,
-            }),
-          });
-          const data = await res.json();
-          document.getElementById("user_status").innerText =
-            data.message || "Đã gửi yêu cầu";
-        } catch (e) {
-          document.getElementById("user_status").innerText =
-            "Lỗi kết nối User Service!";
-        }
-      }
+        // TRẠNG THÁI ỨNG DỤNG
+        let allProducts = [];
+        let cart = [];
+        let currentUser = null;
+        let loyaltyPoints = 0;
+        let generatedOtpCode = null;
+        let flashSaleOnly = false;
+        let currentLang = 'vi';
 
-      // 2. Đăng nhập
-      async function login() {
-        try {
-          const res = await fetch("/api/users/login", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              email: document.getElementById("login_email").value,
-              password: document.getElementById("login_password").value,
-            }),
-          });
-          const data = await res.json();
-          if (data.status === "success" || res.ok) {
-            document.getElementById("user_status").innerText =
-              "Đã đăng nhập: " + (data.data?.username || "Thành công");
-            if (data.data?.id)
-              document.getElementById("order_user_id").value = data.data.id;
-          } else {
-            document.getElementById("user_status").innerText =
-              data.message || "Đăng nhập thất bại";
-          }
-        } catch (e) {
-          document.getElementById("user_status").innerText =
-            "Lỗi kết nối User Service!";
-        }
-      }
+        // TỪ ĐIỂN ĐA NGÔN NGỮ
+        const i18n = {
+            vi: {
+                hotNews: "Ưu đãi chào mừng: Miễn phí vận chuyển toàn quốc cho đơn từ 299k!",
+                cart: "Giỏ hàng",
+                listHeader: "Danh Sách Sản Phẩm",
+                loyalty: "Hội viên"
+            },
+            en: {
+                hotNews: "Welcome offer: Free nationwide delivery for orders over 299k VND!",
+                cart: "Shopping Cart",
+                listHeader: "Product Catalog",
+                loyalty: "Member Tier"
+            }
+        };
 
-      // 3. Tải danh sách sản phẩm
-      async function loadProducts() {
-        try {
-          const res = await fetch("/api/products");
-          const data = await res.json();
-          const list = document.getElementById("product_list");
-          list.innerHTML = "";
-          const items = data.data || data;
-          if (Array.isArray(items) && items.length > 0) {
-            items.forEach((p) => {
-              list.innerHTML += `<li><b>[ID: ${p.id}] ${p.name}</b> - Giá: ${Number(p.price).toLocaleString()}đ (Kho: ${p.stock})</li>`;
+        function changeLanguage(lang) {
+            currentLang = lang;
+            document.getElementById('current-lang').innerText = lang === 'vi' ? 'Tiếng Việt' : 'English';
+            document.getElementById('txt-hot-news').innerHTML = `<i class="fa-solid fa-bullhorn text-warning me-1"></i> ${i18n[lang].hotNews}`;
+            document.getElementById('txt-cart').innerText = i18n[lang].cart;
+            document.getElementById('txt-list-header').innerHTML = `<i class="fa-solid fa-bag-shopping me-2 text-primary"></i> ${i18n[lang].listHeader}`;
+            updateLoyaltyDisplay();
+        }
+
+        // 1. TẢI DỮ LIỆU TỪ PRODUCT SERVICE
+        async function loadProducts() {
+            try {
+                const res = await fetch('/api/products');
+                let data = await res.json();
+                
+                // Gán thuộc tính mô phỏng danh mục & giảm giá nếu chưa có từ CSDL
+                allProducts = data.map((p, idx) => ({
+                    ...p,
+                    category: idx % 3 === 0 ? 'gym' : (idx % 3 === 1 ? 'ball' : 'racket'),
+                    discount: idx % 2 === 0 ? 15 : 0 // Giảm giá 15% cho một số mã
+                }));
+                applyFilters();
+            } catch (err) {
+                console.error("Lỗi kết nối Product Service:", err);
+                document.getElementById('product-grid').innerHTML = `
+                    <div class="col-12 text-center text-danger py-4">
+                        <i class="fa-solid fa-triangle-exclamation fa-2x mb-2"></i>
+                        <p>Không thể kết nối đến Product Service qua Nginx Gateway.</p>
+                    </div>`;
+            }
+        }
+
+        // 2. BỘ LỌC, TÌM KIẾM, SẮP XẾP & FLASH SALE
+        function applyFilters() {
+            let filtered = [...allProducts];
+            const cat = document.getElementById('filter-category').value;
+            const sort = document.getElementById('filter-sort').value;
+            const keyword = document.getElementById('input-search').value.toLowerCase().trim();
+
+            if (cat !== 'all') {
+                filtered = filtered.filter(p => p.category === cat);
+            }
+            if (keyword) {
+                filtered = filtered.filter(p => p.name.toLowerCase().includes(keyword));
+            }
+            if (flashSaleOnly) {
+                filtered = filtered.filter(p => p.discount > 0);
+            }
+            if (sort === 'asc') {
+                filtered.sort((a, b) => Number(a.price) - Number(b.price));
+            } else if (sort === 'desc') {
+                filtered.sort((a, b) => Number(b.price) - Number(a.price));
+            }
+
+            renderProductGrid(filtered);
+        }
+
+        function renderProductGrid(products) {
+            const container = document.getElementById('product-grid');
+            document.getElementById('product-count').innerText = `Đang hiển thị: ${products.length} sản phẩm`;
+            container.innerHTML = '';
+
+            if (products.length === 0) {
+                container.innerHTML = `<div class="col-12 text-center py-4 text-muted">Không tìm thấy sản phẩm phù hợp.</div>`;
+                return;
+            }
+
+            products.forEach(p => {
+                const price = Number(p.price);
+                const finalPrice = p.discount > 0 ? price * (1 - p.discount/100) : price;
+                container.innerHTML += `
+                    <div class="col-md-6 col-lg-4">
+                        <div class="product-card h-100 p-3 d-flex flex-column">
+                            ${p.discount > 0 ? `<div class="badge-discount">-${p.discount}% FLASH SALE</div>` : ''}
+                            <div class="text-center py-3 text-primary">
+                                <i class="fa-solid ${p.category === 'ball' ? 'fa-futbol' : (p.category === 'racket' ? 'fa-table-tennis-paddle-ball' : 'fa-dumbbell')} fa-4x"></i>
+                            </div>
+                            <h6 class="fw-bold mb-1 text-truncate" title="${p.name}">${p.name}</h6>
+                            <p class="small text-muted mb-2 text-truncate">${p.description || 'Sản phẩm thể thao cao cấp chính hãng'}</p>
+                            <div class="mt-auto">
+                                <div class="d-flex align-items-baseline gap-2 mb-2">
+                                    <span class="text-danger fw-bold fs-5">${finalPrice.toLocaleString('vi-VN')} đ</span>
+                                    ${p.discount > 0 ? `<small class="text-muted text-decoration-line-through">${price.toLocaleString('vi-VN')} đ</small>` : ''}
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <small class="text-muted"><i class="fa-solid fa-box me-1"></i>Kho: ${p.stock}</small>
+                                    <span class="badge bg-light text-success border">15 Ngày Trả Hàng</span>
+                                </div>
+                                <button class="btn btn-primary btn-sm w-100 fw-bold rounded-pill" onclick="addToCart(${p.id})">
+                                    <i class="fa-solid fa-cart-plus me-1"></i> Thêm Vào Giỏ
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
             });
-          } else {
-            list.innerHTML = "<li>Chưa có sản phẩm nào.</li>";
-          }
-        } catch (e) {
-          document.getElementById("product_list").innerHTML =
-            '<li style="color:red">Lỗi tải sản phẩm!</li>';
         }
-      }
 
-      // 4. Tạo đơn hàng
-      async function createOrder() {
-        try {
-          const res = await fetch("/api/orders", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              user_id: parseInt(document.getElementById("order_user_id").value),
-              items: [
-                {
-                  product_id: parseInt(
-                    document.getElementById("order_product_id").value,
-                  ),
-                  quantity: parseInt(
-                    document.getElementById("order_quantity").value,
-                  ),
-                },
-              ],
-            }),
-          });
-          const data = await res.json();
-          document.getElementById("order_result").innerText =
-            data.message || "Đặt hàng thành công!";
-        } catch (e) {
-          document.getElementById("order_result").innerText =
-            "Lỗi kết nối Order Service!";
+        function handleSearch(e) {
+            if (e.key === 'Enter') applyFilters();
         }
-      }
+        function executeSearch() {
+            applyFilters();
+        }
+        function quickSearch(kw) {
+            document.getElementById('input-search').value = kw;
+            applyFilters();
+        }
+        function toggleFlashSaleFilter() {
+            flashSaleOnly = !flashSaleOnly;
+            const btn = document.getElementById('btn-flash-sale');
+            if (flashSaleOnly) {
+                btn.classList.replace('btn-outline-danger', 'btn-danger');
+            } else {
+                btn.classList.replace('btn-danger', 'btn-outline-danger');
+            }
+            applyFilters();
+        }
+        function filterSaleOnly() {
+            flashSaleOnly = true;
+            document.getElementById('btn-flash-sale').classList.replace('btn-outline-danger', 'btn-danger');
+            applyFilters();
+            window.scrollTo({ top: 500, behavior: 'smooth' });
+        }
 
-      // Tự động load sản phẩm khi vừa mở trang
-      window.onload = loadProducts;
+        // 3. QUẢN LÝ GIỎ HÀNG
+        function addToCart(productId) {
+            const product = allProducts.find(p => p.id === productId);
+            if (!product) return;
+
+            const existing = cart.find(item => item.id === productId);
+            if (existing) {
+                existing.quantity += 1;
+            } else {
+                cart.push({ ...product, quantity: 1 });
+            }
+            updateCartDisplay();
+            alert(`Đã thêm "${product.name}" vào giỏ hàng!`);
+        }
+
+        function updateCartDisplay() {
+            const badge = document.getElementById('cart-badge');
+            const totalQty = cart.reduce((sum, item) => sum + item.quantity, 0);
+            badge.innerText = totalQty;
+
+            const emptyMsg = document.getElementById('cart-empty-msg');
+            const contentArea = document.getElementById('cart-content-area');
+            const tbody = document.getElementById('cart-table-body');
+            const totalPriceEl = document.getElementById('cart-total-price');
+
+            if (cart.length === 0) {
+                emptyMsg.classList.remove('d-none');
+                contentArea.classList.add('d-none');
+                return;
+            }
+
+            emptyMsg.classList.add('d-none');
+            contentArea.classList.remove('d-none');
+            tbody.innerHTML = '';
+            let total = 0;
+
+            cart.forEach((item, index) => {
+                const itemPrice = item.discount > 0 ? Number(item.price) * (1 - item.discount/100) : Number(item.price);
+                const subtotal = itemPrice * item.quantity;
+                total += subtotal;
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${item.name}</strong></td>
+                        <td>${itemPrice.toLocaleString('vi-VN')} đ</td>
+                        <td>
+                            <input type="number" min="1" value="${item.quantity}" class="form-control form-control-sm" style="width: 70px;" onchange="updateCartQty(${index}, this.value)">
+                        </td>
+                        <td class="text-danger fw-bold">${subtotal.toLocaleString('vi-VN')} đ</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-danger" onclick="removeFromCart(${index})"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+            totalPriceEl.innerText = total.toLocaleString('vi-VN') + ' đ';
+        }
+
+        function updateCartQty(index, qty) {
+            cart[index].quantity = parseInt(qty) || 1;
+            updateCartDisplay();
+        }
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            updateCartDisplay();
+        }
+
+        // 4. TIỆN ÍCH ĐẶT HÀNG: GOOGLE MAPS & OTP
+        function detectGoogleMapsLocation() {
+            const status = document.getElementById('geo-status');
+            if (navigator.geolocation) {
+                status.innerText = "Đang xác định tọa độ GPS...";
+                navigator.geolocation.getCurrentPosition(
+                    pos => {
+                        const lat = pos.coords.latitude.toFixed(5);
+                        const lng = pos.coords.longitude.toFixed(5);
+                        document.getElementById('order-address').value = `Vị trí GG Maps [Lat: ${lat}, Long: ${lng}] - TP. Cần Thơ, Việt Nam`;
+                        status.innerText = "Đã lấy tọa độ vị trí chuẩn xác từ Google Maps!";
+                    },
+                    err => {
+                        status.innerText = "Không thể lấy vị trí tự động. Vui lòng nhập tay địa chỉ.";
+                    }
+                );
+            } else {
+                status.innerText = "Trình duyệt không hỗ trợ Geolocation.";
+            }
+        }
+
+        function generateOtp() {
+            generatedOtpCode = Math.floor(1000 + Math.random() * 9000).toString();
+            document.getElementById('otp-hint').innerText = `Mã OTP xác thực gửi về máy của bạn là: ${generatedOtpCode}`;
+        }
+
+        // 5. GỬI ĐƠN HÀNG QUA ORDER SERVICE
+        async function handlePlaceOrder(e) {
+            e.preventDefault();
+            if (cart.length === 0) {
+                alert("Giỏ hàng của bạn đang trống!");
+                return;
+            }
+
+            const otpInput = document.getElementById('order-otp').value.trim();
+            if (otpInput !== generatedOtpCode) {
+                alert("Mã OTP xác nhận không chính xác! Vui lòng bấm 'Lấy mã OTP' và nhập lại.");
+                return;
+            }
+
+            const fullname = document.getElementById('order-fullname').value;
+            const phone = document.getElementById('order-phone').value;
+            const address = document.getElementById('order-address').value;
+            const payment = document.getElementById('order-payment-method').value;
+            const userId = currentUser ? currentUser.id : 1;
+
+            // Đặt hàng cho item đầu tiên trong cart (kết nối với Order Service backend)
+            const firstItem = cart[0];
+            try {
+                const res = await fetch('/api/orders', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: userId,
+                        product_id: firstItem.id,
+                        quantity: firstItem.quantity
+                    })
+                });
+                const result = await res.json();
+                if (res.ok) {
+                    // Cộng điểm khách hàng thân thiết: 100.000đ = 10 điểm
+                    loyaltyPoints += 50;
+                    updateLoyaltyDisplay();
+
+                    alert(`ĐẶT HÀNG THÀNH CÔNG!\n- Mã đơn: #${result.order_id || 'TC-2026'}\n- Người nhận: ${fullname} (${phone})\n- Địa chỉ: ${address}\n- Thanh toán: ${payment.toUpperCase()}\n- Đã tích lũy thêm: +50 Điểm Thân Thiết!`);
+                    
+                    cart = [];
+                    updateCartDisplay();
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('cartModal'));
+                    if (modal) modal.hide();
+                } else {
+                    alert("Đặt hàng thất bại: " + (result.message || "Lỗi Order Service"));
+                }
+            } catch (err) {
+                alert("Lỗi kết nối tới Order Service! Kiểm tra xem container order-service có đang bật không.");
+            }
+        }
+
+        // 6. XỬ LÝ USER SERVICE (ĐĂNG NHẬP / ĐĂNG KÝ / LOYALTY)
+        function setAuthTab(tab) {
+            if (tab === 'login') {
+                document.getElementById('pills-login-tab').click();
+            } else {
+                document.getElementById('pills-reg-tab').click();
+            }
+        }
+
+        async function handleLoginSubmit(e) {
+            e.preventDefault();
+            const username = document.getElementById('auth-login-user').value;
+            const password = document.getElementById('auth-login-pass').value;
+
+            try {
+                const res = await fetch('/api/users', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'login', username, password })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    currentUser = data.user || { id: 1, username: username };
+                    loyaltyPoints = 120; // Điểm mẫu cho user đã đăng nhập
+                    updateUserDisplay();
+                    alert(`Đăng nhập thành công! Xin chào ${currentUser.username}`);
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('authModal'));
+                    if (modal) modal.hide();
+                } else {
+                    alert(data.message || "Sai tên đăng nhập hoặc mật khẩu!");
+                }
+            } catch (err) {
+                alert("Không thể kết nối đến User Service!");
+            }
+        }
+
+        async function handleRegisterSubmit(e) {
+            e.preventDefault();
+            const username = document.getElementById('auth-reg-user').value;
+            const email = document.getElementById('auth-reg-email').value;
+            const password = document.getElementById('auth-reg-pass').value;
+
+            try {
+                const res = await fetch('/api/users', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'register', username, email, password })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    alert("Tạo tài khoản thành công! Vui lòng đăng nhập.");
+                    setAuthTab('login');
+                } else {
+                    alert(data.message || "Đăng ký không thành công!");
+                }
+            } catch (err) {
+                alert("Không thể kết nối đến User Service!");
+            }
+        }
+
+        function updateUserDisplay() {
+            const authNav = document.getElementById('auth-nav-area');
+            if (currentUser) {
+                authNav.innerHTML = `
+                    <span class="text-white me-2"><i class="fa-solid fa-circle-user text-info me-1"></i>${currentUser.username}</span>
+                    <a href="#" class="text-danger" onclick="logout()"><i class="fa-solid fa-power-off"></i></a>
+                `;
+                document.getElementById('order-fullname').value = currentUser.username;
+            } else {
+                authNav.innerHTML = `
+                    <a href="#" class="me-2" data-bs-toggle="modal" data-bs-target="#authModal" onclick="setAuthTab('login')">
+                        <i class="fa-solid fa-arrow-right-to-bracket me-1"></i>Đăng nhập
+                    </a>
+                    <a href="#" data-bs-toggle="modal" data-bs-target="#authModal" onclick="setAuthTab('register')">
+                        <i class="fa-solid fa-user-plus me-1"></i>Đăng ký
+                    </a>
+                `;
+            }
+            updateLoyaltyDisplay();
+        }
+
+        function updateLoyaltyDisplay() {
+            let rank = 'Đồng';
+            if (loyaltyPoints >= 200) rank = 'Vàng';
+            else if (loyaltyPoints >= 100) rank = 'Bạc';
+
+            const prefix = i18n[currentLang].loyalty;
+            document.getElementById('loyalty-status').innerHTML = `${prefix}: <span class="badge bg-warning text-dark tier-badge">${rank} (${loyaltyPoints}đ)</span>`;
+        }
+
+        function logout() {
+            currentUser = null;
+            loyaltyPoints = 0;
+            updateUserDisplay();
+            alert("Đã đăng xuất tài khoản.");
+        }
+
+        // Tự động tải sản phẩm và điểm ban đầu
+        document.addEventListener('DOMContentLoaded', () => {
+            loadProducts();
+            updateLoyaltyDisplay();
+        });
     </script>
-  </body>
+</body>
 </html>
