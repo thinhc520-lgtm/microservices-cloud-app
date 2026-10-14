@@ -52,6 +52,7 @@ services:
       MYSQL_DATABASE: user_db
     volumes:
       - db_user_data:/var/lib/mysql
+      - ./user-service/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     networks:
       - app-network
 
@@ -73,6 +74,7 @@ services:
       MYSQL_DATABASE: product_db
     volumes:
       - db_product_data:/var/lib/mysql
+      - ./product-service/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     networks:
       - app-network
 
@@ -94,5 +96,6 @@ services:
       MYSQL_DATABASE: order_db
     volumes:
       - db_order_data:/var/lib/mysql
+      - ./order-service/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     networks:
       - app-network

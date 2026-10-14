@@ -58,12 +58,32 @@ if ($method === 'POST') {
     try {
         $stmt = $pdo->prepare("INSERT INTO orders (user_id, product_id, quantity, total_price, status) VALUES (?, ?, ?, ?, 'COMPLETED')");
         $stmt->execute([$userId, $productId, $quantity, $totalPrice]);
+        $orderId = $pdo->lastInsertId();
+
+        // 5. Gọi sang Product Service để cập nhật giảm tồn kho
+        $reducePayload = json_encode([
+            "product_id" => $productId,
+            "quantity"   => $quantity
+        ]);
+        $streamOptions = [
+            'http' => [
+                'method'  => 'POST',
+                'header'  => "Content-Type: application/json\r\n",
+                'content' => $reducePayload,
+                'timeout' => 5
+            ]
+        ];
+        $streamContext = stream_context_create($streamOptions);
+        $reduceRes = @file_get_contents("http://product-service/index.php/reduce-stock", false, $streamContext);
+        if (!$reduceRes) {
+            @file_get_contents("http://product-service/reduce-stock", false, $streamContext);
+        }
 
         echo json_encode([
             "status"  => "success",
             "message" => "Đặt hàng thành công",
             "data"    => [
-                "order_id"    => $pdo->lastInsertId(),
+                "order_id"    => $orderId,
                 "total_price" => $totalPrice,
                 "status"      => "COMPLETED"
             ]

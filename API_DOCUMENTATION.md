@@ -4,7 +4,7 @@ Hệ thống gồm 3 Microservices độc lập, truyền nhận dữ liệu qua
 
 ---
 
-## 1. DỊCH VỤ NGƯỜI DÙNG (User Service - Port: 8001)
+## 1. DỊCH VỤ NGƯỜI DÙNG (User Service - Endpoint: /api/users)
 
 Quản lý tài khoản và xác thực người dùng.
 
@@ -61,7 +61,7 @@ Quản lý tài khoản và xác thực người dùng.
 
 ---
 
-## 2. DỊCH VỤ SẢN PHẨM (Product Service - Port: 8002)
+## 2. DỊCH VỤ SẢN PHẨM (Product Service - Endpoint: /api/products)
 
 Quản lý danh mục sản phẩm và kho hàng.
 
@@ -120,9 +120,32 @@ Quản lý danh mục sản phẩm và kho hàng.
   "product_id": 3
 }
 
+### 2.4. Cập nhật giảm tồn kho (API nội bộ cho Order Service)
+
+* Endpoint: POST /api/products/reduce-stock
+
+* Request Body:
+
+{
+  "product_id": 1,
+  "quantity": 2
+}
+
+* Response 200 OK:
+
+{
+  "status": "success",
+  "message": "Trừ tồn kho thành công",
+  "data": {
+    "id": 1,
+    "name": "Giày chạy bộ Nike Air Zoom",
+    "stock": 48
+  }
+}
+
 ---
 
-## 3. DỊCH VỤ ĐƠN HÀNG (Order Service - Port: 8003)
+## 3. DỊCH VỤ ĐƠN HÀNG (Order Service)
 
 Quản lý đặt hàng và lịch sử giao dịch.
 

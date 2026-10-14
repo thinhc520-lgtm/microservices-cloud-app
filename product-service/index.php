@@ -28,5 +28,45 @@ if ($method === 'GET') {
     exit;
 }
 
+// 3. Giảm số lượng tồn kho (API nội bộ cho Order Service gọi khi đặt hàng)
+if (($method === 'POST' || $method === 'PUT') && (strpos($path, 'reduce-stock') !== false || strpos($path, 'stock') !== false)) {
+    $input = json_decode(file_get_contents('php://input'), true);
+    preg_match('/\/([0-9]+)/', $path, $matches);
+    $productId = $input['product_id'] ?? ($matches[1] ?? null);
+    $quantity  = (int)($input['quantity'] ?? 0);
+
+    if (empty($productId) || $quantity <= 0) {
+        http_response_code(400);
+        echo json_encode(["status" => "error", "message" => "Thiếu ID sản phẩm hoặc số lượng trừ kho không hợp lệ", "data" => null]);
+        exit;
+    }
+
+    $productId = (int)$productId;
+
+    // Trừ kho an toàn bằng câu lệnh UPDATE có điều kiện stock >= quantity
+    $stmt = $pdo->prepare("UPDATE products SET stock = stock - ? WHERE id = ? AND stock >= ?");
+    $stmt->execute([$quantity, $productId, $quantity]);
+
+    if ($stmt->rowCount() > 0) {
+        $getStmt = $pdo->prepare("SELECT * FROM products WHERE id = ?");
+        $getStmt->execute([$productId]);
+        $product = $getStmt->fetch();
+
+        echo json_encode([
+            "status" => "success",
+            "message" => "Trừ tồn kho thành công",
+            "data" => $product
+        ]);
+    } else {
+        http_response_code(400);
+        echo json_encode([
+            "status" => "error",
+            "message" => "Không thể trừ kho: Tồn kho không đủ hoặc sản phẩm không tồn tại",
+            "data" => null
+        ]);
+    }
+    exit;
+}
+
 http_response_code(404);
 echo json_encode(["status" => "error", "message" => "Endpoint không hợp lệ", "data" => null]);
