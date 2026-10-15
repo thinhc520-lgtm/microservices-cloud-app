@@ -398,7 +398,12 @@
                                     </div>
                                     <div class="mb-2">
                                         <label class="form-label small text-muted">Mật khẩu</label>
-                                        <input type="password" id="auth-login-pass" class="form-control" placeholder="Nhập mật khẩu" required>
+                                        <div class="input-group">
+                                            <input type="password" id="auth-login-pass" class="form-control" placeholder="Nhập mật khẩu" required>
+                                            <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('auth-login-pass', 'login-eye-icon')" title="Xem mật khẩu">
+                                                <i class="fa-solid fa-eye" id="login-eye-icon"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                     <!-- Nút mở tính năng Quên mật khẩu -->
                                     <div class="d-flex justify-content-end mb-3">
