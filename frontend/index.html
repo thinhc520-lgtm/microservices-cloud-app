@@ -124,33 +124,8 @@
           >
         </div>
         <div class="d-flex align-items-center gap-3">
-          <!-- Chọn ngôn ngữ -->
-          <div class="dropdown">
-            <a
-              class="dropdown-toggle"
-              href="#"
-              role="button"
-              data-bs-toggle="dropdown"
-            >
-              <i class="fa-solid fa-globe me-1"></i>
-              <span id="current-lang">Tiếng Việt</span>
-            </a>
-            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-              <li>
-                <a class="dropdown-item" href="#" onclick="changeLanguage('vi')"
-                  >Tiếng Việt (VN)</a
-                >
-              </li>
-              <li>
-                <a class="dropdown-item" href="#" onclick="changeLanguage('en')"
-                  >English (US)</a
-                >
-              </li>
-            </ul>
-          </div>
-
           <!-- Khách hàng thân thiết (Loyalty) -->
-          <span class="border-start ps-3 d-flex align-items-center gap-1">
+          <span class="d-flex align-items-center gap-1">
             <i class="fa-solid fa-crown text-warning"></i>
             <span id="loyalty-status">Hội viên: 0 Điểm</span>
           </span>
@@ -1097,8 +1072,10 @@
 
       function changeLanguage(lang) {
         currentLang = lang;
-        document.getElementById("current-lang").innerText =
-          lang === "vi" ? "Tiếng Việt" : "English";
+        const currentLangEl = document.getElementById("current-lang");
+        if (currentLangEl) {
+          currentLangEl.innerText = lang === "vi" ? "Tiếng Việt" : "English";
+        }
         document.getElementById("txt-hot-news").innerHTML =
           `<i class="fa-solid fa-bullhorn text-warning me-1"></i> ${i18n[lang].hotNews}`;
         document.getElementById("txt-cart").innerText = i18n[lang].cart;
@@ -2006,6 +1983,7 @@
         localStorage.removeItem('currentUser');
         localStorage.removeItem('token');
         localStorage.removeItem('cart');
+        sessionStorage.clear();
         window.location.reload();
       }
 
