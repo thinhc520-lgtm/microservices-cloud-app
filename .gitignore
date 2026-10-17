@@ -1,4 +1,13 @@
+# OS / Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
 
+# Binaries & Tunnels
 cloudflared.exe
+*.exe
 
-cloudflared.exe
+# Temporary files
+*.tmp
+*.log
