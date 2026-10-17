@@ -90,6 +90,29 @@
         font-weight: bold;
         padding: 4px 8px;
         border-radius: 4px;
+        z-index: 2;
+      }
+      .product-card-img {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        border-top-left-radius: inherit;
+        border-top-right-radius: inherit;
+        background-color: #f8f9fa;
+        display: block;
+        transition: transform 0.3s ease;
+      }
+      .product-card:hover .product-card-img {
+        transform: scale(1.03);
+      }
+      .product-card-img-wrap {
+        position: relative;
+        overflow: hidden;
+        width: 100%;
+        height: 200px;
+        background-color: #f8f9fa;
+        border-top-left-radius: inherit;
+        border-top-right-radius: inherit;
       }
       .floating-support {
         position: fixed;
@@ -1192,14 +1215,13 @@
           let imgBlock = "";
           if (mainImg) {
             imgBlock = `
-              <div class="position-relative text-center py-2" style="cursor: pointer;" onclick="openProductGallery(${p.id})" title="Bấm để xem album ảnh và chi tiết">
-                <img src="${mainImg}" class="card-img-top p-3" style="height: 180px; object-fit: contain;" alt="${p.name}">
-                ${imgList.length > 1 ? `<span class="badge bg-dark bg-opacity-75 position-absolute" style="bottom: 10px; right: 15px; font-size: 0.75rem;"><i class="fa-solid fa-images me-1"></i>${imgList.length} ảnh</span>` : ""}
+              <div class="product-card-img-wrap" style="cursor: pointer;" onclick="openProductGallery(${p.id})" title="Bấm để xem album ảnh và chi tiết">
+                <img src="${mainImg}" class="product-card-img" alt="${p.name}">
               </div>
             `;
           } else {
             imgBlock = `
-              <div class="text-center py-3 text-primary" style="cursor: pointer;" onclick="openProductGallery(${p.id})" title="Bấm để xem chi tiết">
+              <div class="product-card-img-wrap d-flex align-items-center justify-content-center text-primary" style="cursor: pointer;" onclick="openProductGallery(${p.id})" title="Bấm để xem chi tiết">
                 <i class="fa-solid ${p.category === "ball" ? "fa-futbol" : p.category === "racket" ? "fa-table-tennis-paddle-ball" : "fa-dumbbell"} fa-4x"></i>
               </div>
             `;
@@ -1207,27 +1229,29 @@
 
           container.innerHTML += `
                     <div class="col-md-6 col-lg-4">
-                        <div class="product-card h-100 p-3 d-flex flex-column">
+                        <div class="product-card h-100 d-flex flex-column">
                             ${p.discount > 0 ? `<div class="badge-discount">-${p.discount}% FLASH SALE</div>` : ""}
                             ${imgBlock}
-                            <h6 class="fw-bold mb-1 text-truncate" title="${p.name}" style="cursor: pointer;" onclick="openProductGallery(${p.id})">${p.name}</h6>
-                            <p class="small text-muted mb-2 text-truncate">${p.description || "Sản phẩm thể thao cao cấp chính hãng"}</p>
-                            <div class="mt-auto">
-                                <div class="d-flex align-items-baseline gap-2 mb-2">
-                                    <span class="text-danger fw-bold fs-5">${finalPrice.toLocaleString("vi-VN")} đ</span>
-                                    ${p.discount > 0 ? `<small class="text-muted text-decoration-line-through">${price.toLocaleString("vi-VN")} đ</small>` : ""}
-                                </div>
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <small class="${stock <= 5 ? 'text-danger fw-bold' : 'text-muted'}"><i class="fa-solid fa-box me-1"></i>Kho: ${stock !== undefined && stock !== null ? stock : 0}${stock <= 5 && stock > 0 ? ' (Sắp hết)' : stock === 0 ? ' (Hết hàng)' : ''}</small>
-                                    <span class="badge bg-light text-success border">15 Ngày Trả Hàng</span>
-                                </div>
-                                <div class="d-flex gap-2">
-                                    <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" title="Xem chi tiết & album ảnh" onclick="openProductGallery(${p.id})">
-                                        <i class="fa-solid fa-eye"></i>
-                                    </button>
-                                    <button class="btn btn-primary btn-sm flex-grow-1 fw-bold rounded-pill" onclick="addToCart(${p.id})">
-                                        <i class="fa-solid fa-cart-plus me-1"></i> Thêm Vào Giỏ
-                                    </button>
+                            <div class="p-3 d-flex flex-column flex-grow-1">
+                                <h6 class="fw-bold mb-1 text-truncate" title="${p.name}" style="cursor: pointer;" onclick="openProductGallery(${p.id})">${p.name}</h6>
+                                <p class="small text-muted mb-2 text-truncate">${p.description || "Sản phẩm thể thao cao cấp chính hãng"}</p>
+                                <div class="mt-auto">
+                                    <div class="d-flex align-items-baseline gap-2 mb-2">
+                                        <span class="text-danger fw-bold fs-5">${finalPrice.toLocaleString("vi-VN")} đ</span>
+                                        ${p.discount > 0 ? `<small class="text-muted text-decoration-line-through">${price.toLocaleString("vi-VN")} đ</small>` : ""}
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <small class="${stock <= 5 ? 'text-danger fw-bold' : 'text-muted'}"><i class="fa-solid fa-box me-1"></i>Kho: ${stock !== undefined && stock !== null ? stock : 0}${stock <= 5 && stock > 0 ? ' (Sắp hết)' : stock === 0 ? ' (Hết hàng)' : ''}</small>
+                                        <span class="badge bg-light text-success border">15 Ngày Trả Hàng</span>
+                                    </div>
+                                    <div class="d-flex gap-2">
+                                        <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" title="Xem chi tiết & album ảnh" onclick="openProductGallery(${p.id})">
+                                            <i class="fa-solid fa-eye"></i>
+                                        </button>
+                                        <button class="btn btn-primary btn-sm flex-grow-1 fw-bold rounded-pill" onclick="addToCart(${p.id})">
+                                            <i class="fa-solid fa-cart-plus me-1"></i> Thêm Vào Giỏ
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
