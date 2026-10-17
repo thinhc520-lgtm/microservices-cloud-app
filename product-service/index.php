@@ -75,7 +75,8 @@ if ($method === 'POST') {
     $price = (float)($input['price'] ?? 0);
     $stock = isset($input['stock']) ? (int)$input['stock'] : 0;
     $description = trim($input['description'] ?? '');
-    $image = trim($input['image'] ?? '');
+    $imageRaw = $input['image'] ?? null;
+    $image = is_array($imageRaw) ? json_encode($imageRaw, JSON_UNESCAPED_UNICODE) : (isset($imageRaw) ? trim($imageRaw) : null);
 
     if (empty($name) || $price <= 0) {
         http_response_code(400);
@@ -118,7 +119,8 @@ if ($method === 'PUT') {
     $price = (float)($input['price'] ?? 0);
     $stock = isset($input['stock']) ? (int)$input['stock'] : 0;
     $description = trim($input['description'] ?? '');
-    $image = isset($input['image']) ? trim($input['image']) : null;
+    $imageRaw = $input['image'] ?? null;
+    $image = is_array($imageRaw) ? json_encode($imageRaw, JSON_UNESCAPED_UNICODE) : (isset($imageRaw) ? trim($imageRaw) : null);
 
     if ($id <= 0 || empty($name) || $price <= 0) {
         http_response_code(400);
@@ -127,14 +129,14 @@ if ($method === 'PUT') {
     }
 
     try {
-        if ($image !== null && $image !== '') {
+        if ($image !== null) {
             $stmt = $pdo->prepare("UPDATE products SET name = ?, description = ?, price = ?, stock = ?, image = ? WHERE id = ?");
-            $stmt->execute([$name, $description, $price, $stock, $image, $id]);
+            $stmt->execute([$name, $description, $price, $stock, $image !== '' ? $image : null, $id]);
         } else {
             $stmt = $pdo->prepare("UPDATE products SET name = ?, description = ?, price = ?, stock = ? WHERE id = ?");
             $stmt->execute([$name, $description, $price, $stock, $id]);
         }
-        echo json_encode(["status" => "success", "message" => "Cập nhật sản phẩm thành công", "data" => ["id" => $id, "name" => $name, "price" => $price, "stock" => $stock]]);
+        echo json_encode(["status" => "success", "message" => "Cập nhật sản phẩm thành công", "data" => ["id" => $id, "name" => $name, "price" => $price, "stock" => $stock, "image" => $image]]);
     } catch (PDOException $e) {
         http_response_code(500);
         echo json_encode(["status" => "error", "message" => "Lỗi cập nhật: " . $e->getMessage(), "data" => null]);

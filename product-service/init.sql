@@ -9,7 +9,7 @@ CREATE TABLE products (
     description TEXT,
     price DECIMAL(10, 2) NOT NULL,
     stock INT DEFAULT 0,
-    image MEDIUMTEXT DEFAULT NULL,
+    image LONGTEXT DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
