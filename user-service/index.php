@@ -112,5 +112,48 @@ if (($method === 'PUT' || $method === 'PATCH' || $method === 'POST') && preg_mat
     }
 }
 
+// 5. API xóa người dùng (DELETE /api/users/{id})
+if ($method === 'DELETE' && preg_match('/\/([0-9]+)$/', $path, $matches)) {
+    $userId = (int)$matches[1];
+
+    if ($userId <= 0) {
+        http_response_code(400);
+        echo json_encode(["status" => "error", "message" => "ID tài khoản không hợp lệ", "data" => null]);
+        exit;
+    }
+
+    // Kiểm tra tài khoản có tồn tại không
+    $stmt = $pdo->prepare("SELECT id, username, role FROM users WHERE id = ?");
+    $stmt->execute([$userId]);
+    $user = $stmt->fetch();
+
+    if (!$user) {
+        http_response_code(404);
+        echo json_encode(["status" => "error", "message" => "Không tìm thấy người dùng", "data" => null]);
+        exit;
+    }
+
+    // Không cho phép xóa tài khoản admin (id = 1 hoặc role = 'ADMIN')
+    if ($userId === 1 || strtoupper(trim((string)$user['role'])) === 'ADMIN' || strtolower(trim((string)$user['username'])) === 'admin') {
+        http_response_code(403);
+        echo json_encode(["status" => "error", "message" => "Không được phép xóa tài khoản Quản trị viên (ADMIN)!", "data" => null]);
+        exit;
+    }
+
+    try {
+        $delStmt = $pdo->prepare("DELETE FROM users WHERE id = ?");
+        $delStmt->execute([$userId]);
+        echo json_encode([
+            "status"  => "success",
+            "message" => "Xóa tài khoản thành công!",
+            "data"    => ["id" => $userId, "username" => $user['username']]
+        ]);
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode(["status" => "error", "message" => "Lỗi xóa tài khoản: " . $e->getMessage(), "data" => null]);
+    }
+    exit;
+}
+
 http_response_code(404);
 echo json_encode(["status" => "error", "message" => "Endpoint không hợp lệ", "data" => null]);

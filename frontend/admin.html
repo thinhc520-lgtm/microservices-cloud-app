@@ -1358,6 +1358,9 @@
                                 <button class="btn btn-sm ${isLocked ? 'btn-outline-success' : 'btn-outline-warning'}" onclick="toggleUserLock(${u.id})">
                                     <i class="fa-solid ${isLocked ? 'fa-lock-open' : 'fa-lock'} me-1"></i>${isLocked ? 'Mở khóa' : 'Khóa tài khoản'}
                                 </button>
+                                <button class="btn btn-outline-danger btn-sm ms-1" onclick="deleteUser(${u.id}, '${u.username}')">
+                                    <i class="fa-solid fa-trash"></i> Xóa
+                                </button>
                             `}
                         </td>
                     </tr>
@@ -1386,6 +1389,41 @@
             } catch (_) {}
 
             renderUsersTable();
+        }
+
+        async function deleteUser(userId, username) {
+            const displayName = username ? `"${username}"` : `#${userId}`;
+            if (!confirm(`Bạn có chắc chắn muốn xóa tài khoản ${displayName} không? Thao tác này không thể hoàn tác!`)) {
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/users/${userId}`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                const result = await res.json();
+                if (res.ok && result.status === 'success') {
+                    alert(`Đã xóa tài khoản ${displayName} thành công!`);
+
+                    // Dọn dẹp override trong localStorage nếu có
+                    try {
+                        const statusMap = JSON.parse(localStorage.getItem('adminUserStatus') || '{}');
+                        delete statusMap[userId];
+                        delete statusMap[String(userId)];
+                        localStorage.setItem('adminUserStatus', JSON.stringify(statusMap));
+                    } catch (_) {}
+
+                    // Tải lại danh sách tài khoản
+                    await fetchUsers();
+                } else {
+                    alert(result.message || "Không thể xóa tài khoản. Vui lòng thử lại!");
+                }
+            } catch (err) {
+                console.error("Lỗi khi xóa tài khoản:", err);
+                alert("Lỗi kết nối khi gửi yêu cầu xóa tài khoản!");
+            }
         }
     </script>
 </body>
