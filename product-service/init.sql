@@ -16,10 +16,11 @@ CREATE TABLE products (
 INSERT INTO products (id, name, description, price, stock, image) VALUES
 (1, 'Giày chạy bộ Nike Air Zoom', 'Giày thể thao chạy bộ êm ái thoáng khí', 2500000.00, 50, NULL),
 (2, 'Áo bóng đá CLB Real Madrid', 'Áo đấu thể thao chính hãng mùa giải 2026', 450000.00, 100, NULL),
-(3, 'Quả bóng đá thi đấu FIFA', 'Bóng da cao cấp đạt tiêu chuẩn thi đấu quốc tế', 650000.00, 30, NULL),
+(3, 'Quả bóng đá thi đấu FIFA', 'Bóng da cao cấp đạt tiêu chuẩn thi đấu quốc tế', 650000.00, 30, '[ "https://images.unsplash.com/photo-1614632537423-1e6c2e7e0aab?w=600", "https://images.unsplash.com/photo-1552667466-07770ae110d0?w=600" ]'),
 (4, 'Vợt cầu lông Yonex Astrox 88D', 'Vợt công thủ toàn diện trợ lực carbon siêu nhẹ', 3200000.00, 25, NULL),
 (5, 'Giày đá bóng sân cỏ nhân tạo Predator', 'Giày đinh TF bám sân kiểm soát bóng tối ưu', 1850000.00, 40, NULL),
 (6, 'Thảm tập Yoga định tuyến TPE 8mm', 'Thảm tập thể dục thể thao chống trơn trượt', 350000.00, 60, NULL),
 (7, 'Bộ tạ tay đa năng điều chỉnh 20kg', 'Tạ gang bọc cao su tập gym tại nhà', 1200000.00, 15, NULL),
 (8, 'Bình nước thể thao Lock&Lock 800ml', 'Bình nước giữ nhiệt inox 304 có quai xách', 280000.00, 80, NULL),
-(9, 'Túi trống thể thao Gym & Du lịch', 'Túi đựng đồ tập gym chống nước có ngăn để giày riêng', 490000.00, 45, NULL);
+(9, 'Túi trống thể thao Gym & Du lịch', 'Túi đựng đồ tập gym chống nước có ngăn để giày riêng', 490000.00, 45, NULL),
+(11, 'Giay Adidas', 'Giày thể thao Adidas chính hãng êm ái phong cách', 5000000.00, 27, '[ "https://images.unsplash.com/photo-1587563871167-1ee9c731aefb?w=800", "https://images.unsplash.com/photo-1518002171953-a080ee817e1f?w=800" ]');
