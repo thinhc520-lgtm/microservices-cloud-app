@@ -56,8 +56,9 @@ if ($method === 'POST') {
     // 4. Tính tổng tiền và lưu vào order_db
     $totalPrice = $product['price'] * $quantity;
     try {
-        $stmt = $pdo->prepare("INSERT INTO orders (user_id, product_id, quantity, total_price, status) VALUES (?, ?, ?, ?, 'COMPLETED')");
-        $stmt->execute([$userId, $productId, $quantity, $totalPrice]);
+        $status = $input['status'] ?? 'PENDING';
+        $stmt = $pdo->prepare("INSERT INTO orders (user_id, product_id, quantity, total_price, status) VALUES (?, ?, ?, ?, ?)");
+        $stmt->execute([$userId, $productId, $quantity, $totalPrice, $status]);
         $orderId = $pdo->lastInsertId();
 
         // 5. Gọi sang Product Service để cập nhật giảm tồn kho
@@ -85,7 +86,7 @@ if ($method === 'POST') {
             "data"    => [
                 "order_id"    => $orderId,
                 "total_price" => $totalPrice,
-                "status"      => "COMPLETED"
+                "status"      => $status
             ]
         ]);
     } catch (PDOException $e) {
@@ -99,6 +100,36 @@ if ($method === 'POST') {
 if ($method === 'GET') {
     $stmt = $pdo->query("SELECT * FROM orders ORDER BY id DESC");
     echo json_encode(["status" => "success", "message" => "Danh sách đơn hàng", "data" => $stmt->fetchAll()]);
+    exit;
+}
+
+// Cập nhật trạng thái đơn hàng (PUT /api/orders hoặc /api/orders/{id})
+if ($method === 'PUT') {
+    $uriOrderId = null;
+    if (preg_match('#/([0-9]+)$#', parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), $matches)) {
+        $uriOrderId = (int)$matches[1];
+    }
+    $orderId = (int)($input['order_id'] ?? ($input['id'] ?? $uriOrderId));
+    $newStatus = trim($input['status'] ?? '');
+
+    if (empty($orderId) || empty($newStatus)) {
+        http_response_code(400);
+        echo json_encode(["status" => "error", "message" => "Thiếu order_id hoặc status", "data" => null]);
+        exit;
+    }
+
+    try {
+        $stmt = $pdo->prepare("UPDATE orders SET status = ? WHERE id = ?");
+        $stmt->execute([$newStatus, $orderId]);
+        echo json_encode([
+            "status"  => "success",
+            "message" => "Cập nhật trạng thái đơn hàng thành công",
+            "data"    => ["order_id" => $orderId, "status" => $newStatus]
+        ]);
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode(["status" => "error", "message" => "Lỗi cập nhật: " . $e->getMessage(), "data" => null]);
+    }
     exit;
 }
 

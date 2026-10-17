@@ -49,11 +49,11 @@ if ($method === 'POST' && strpos($path, 'login') !== false) {
     exit;
 }
 
-// 3. API nội bộ lấy User theo ID cho Order Service gọi
+// 3. API lấy danh sách người dùng hoặc lấy User theo ID
 if ($method === 'GET') {
     preg_match('/\/([0-9]+)$/', $path, $matches);
     if (!empty($matches[1])) {
-        $stmt = $pdo->prepare("SELECT id, username, email FROM users WHERE id = ?");
+        $stmt = $pdo->prepare("SELECT id, username, email, role, created_at FROM users WHERE id = ?");
         $stmt->execute([$matches[1]]);
         $user = $stmt->fetch();
         if ($user) {
@@ -64,6 +64,10 @@ if ($method === 'GET') {
         }
         exit;
     }
+
+    $stmt = $pdo->query("SELECT id, username, email, role, created_at FROM users ORDER BY id ASC");
+    echo json_encode(["status" => "success", "message" => "Danh sách người dùng", "data" => $stmt->fetchAll()]);
+    exit;
 }
 
 http_response_code(404);

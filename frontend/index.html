@@ -166,6 +166,14 @@
           </a>
 
           <a
+            href="tracking.html"
+            class="border-start ps-3 text-info text-decoration-none fw-semibold d-flex align-items-center gap-1"
+          >
+            <i class="fa-solid fa-location-arrow"></i>
+            <span>Tra Cứu Vận Đơn</span>
+          </a>
+
+          <a
             href="admin.html"
             class="border-start ps-3 text-warning text-decoration-none fw-semibold d-flex align-items-center gap-1"
           >
@@ -1355,48 +1363,77 @@
         const phone = document.getElementById("order-phone").value;
         const address = document.getElementById("order-address").value;
         const payment = document.getElementById("order-payment-method").value;
-        const userId = currentUser ? currentUser.id : 1;
         const totalPriceText =
           document.getElementById("cart-total-price").innerText;
 
-        const firstItem = cart[0];
+        // Lấy đúng user_id của tài khoản đang đăng nhập từ localStorage
+        let userId = 1;
         try {
-          const res = await fetch("/api/orders", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              user_id: userId,
-              product_id: firstItem.id,
-              quantity: firstItem.quantity,
-            }),
-          });
-          const result = await res.json();
-          if (res.ok) {
+          const storedUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
+          const realUser = storedUser.data || storedUser.user || storedUser;
+          if (realUser && realUser.id) {
+            userId = Number(realUser.id);
+          } else if (currentUser && currentUser.id) {
+            userId = Number(currentUser.id);
+          }
+        } catch (_) {}
+
+        try {
+          // Lấy đúng từng sản phẩm thực tế đang chọn trong giỏ hàng (cart)
+          const createdOrders = [];
+          for (const item of cart) {
+            const res = await fetch("/api/orders", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                user_id: userId,
+                product_id: Number(item.id),
+                quantity: Number(item.quantity || 1),
+                status: "PENDING"
+              }),
+            });
+            const result = await res.json();
+            if (res.ok && result.data) {
+              const oId = result.data.order_id || result.data.id || result.order_id;
+              createdOrders.push({
+                order_id: oId,
+                product_id: item.id,
+                name: item.name,
+                price: Number(item.price),
+                quantity: Number(item.quantity || 1),
+                image: item.image || ''
+              });
+            }
+          }
+
+          if (createdOrders.length > 0) {
             loyaltyPoints += 50;
             updateLoyaltyDisplay();
 
-            const orderId = result.data
-              ? result.data.order_id || result.data.id
-              : result.order_id || Math.floor(1000 + Math.random() * 9000);
+            const orderIdsStr = createdOrders.map(o => `#${o.order_id}`).join(", ");
+            const mainOrderId = createdOrders[0].order_id;
 
-            // LƯU ĐƠN HÀNG VÀO LỊCH SỬ THEO DÕI (LocalStorage theo từng User)
+            // Lưu lịch sử đơn hàng ĐỘNG theo đúng sản phẩm và đơn hàng vừa tạo
             saveOrderToHistory({
-              order_id: orderId,
-              username: currentUser.username,
+              order_id: createdOrders.map(o => o.order_id).join(", "),
+              items: createdOrders,
+              username: (currentUser ? currentUser.username : "customer"),
               date: new Date().toLocaleString("vi-VN"),
               fullname: fullname,
               phone: phone,
               address: address,
               payment: payment.toUpperCase(),
               total: totalPriceText,
-              status: "Đang xử lý (Order Service đã tiếp nhận)",
+              status: "Đang xử lý (PENDING)",
             });
 
             alert(
-              `🎉 ĐẶT HÀNG THÀNH CÔNG!\n- Mã đơn: #${orderId}\n- Người nhận: ${fullname} (${phone})\n- Địa chỉ: ${address}\n- Thanh toán: ${payment.toUpperCase()}\n- Đã tích lũy thêm: +50 Điểm Thân Thiết!\n\nHệ thống đang mở trang Theo dõi đơn hàng của bạn.`,
+              `🎉 ĐẶT HÀNG THÀNH CÔNG!\n- Mã đơn: ${orderIdsStr}\n- Người nhận: ${fullname} (${phone})\n- Địa chỉ: ${address}\n- Thanh toán: ${payment.toUpperCase()}\n- Trạng thái: Đang xử lý (PENDING)\n- Đã tích lũy thêm: +50 Điểm Thân Thiết!\n\nHệ thống đang mở trang Theo dõi đơn hàng của bạn.`
             );
 
+            // Xóa sạch giỏ hàng sau khi đặt thành công
             cart = [];
+            localStorage.removeItem("cart");
             updateCartDisplay();
 
             const modal = bootstrap.Modal.getInstance(
@@ -1408,7 +1445,7 @@
             openOrderTrackingModal();
           } else {
             alert(
-              "Đặt hàng thất bại: " + (result.message || "Lỗi Order Service"),
+              "Đặt hàng thất bại: Vui lòng kiểm tra lại kết nối đến Order Service!",
             );
           }
         } catch (err) {
@@ -1461,16 +1498,38 @@
                                     <i class="fa-solid fa-receipt me-1"></i>Đơn Hàng: #${item.order_id}
                                 </span>
                                 <span class="badge bg-warning text-dark px-2 py-1">
-                                    <i class="fa-solid fa-rotate fa-spin me-1"></i>${item.status}
+                                    <i class="fa-solid fa-clock me-1"></i>${item.status || "Đang xử lý (PENDING)"}
                                 </span>
                             </div>
                             <div class="text-muted small mb-2"><i class="fa-regular fa-clock me-1"></i>Thời gian: ${item.date}</div>
+
+                            <!-- Danh sách sản phẩm thực tế trong đơn hàng -->
+                            <div class="p-2 bg-white rounded border mb-2">
+                                ${(item.items || []).map(prod => `
+                                    <div class="d-flex justify-content-between align-items-center py-1 border-bottom">
+                                        <div class="d-flex align-items-center gap-2">
+                                            ${prod.image ? `<img src="${prod.image}" style="width:36px;height:36px;object-fit:cover;border-radius:4px;border:1px solid #dee2e6;">` : `<div class="bg-light d-flex align-items-center justify-content-center text-secondary rounded" style="width:36px;height:36px;"><i class="fa-solid fa-box"></i></div>`}
+                                            <div>
+                                                <div class="fw-semibold small text-dark">${prod.name || 'Sản phẩm thể thao'}</div>
+                                                <small class="text-muted">SL: x${prod.quantity || 1} &bull; ${Number(prod.price).toLocaleString('vi-VN')} đ</small>
+                                            </div>
+                                        </div>
+                                        <div class="fw-bold text-danger small">${Number(prod.price * (prod.quantity || 1)).toLocaleString('vi-VN')} đ</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+
                             <div class="small"><b>Người nhận:</b> ${item.fullname} (${item.phone})</div>
                             <div class="small text-truncate"><b>Địa chỉ:</b> ${item.address}</div>
                             <div class="small"><b>Hình thức thanh toán:</b> <span class="badge bg-light text-dark border">${item.payment}</span></div>
                             <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
                                 <span class="text-muted small">Tổng thanh toán:</span>
                                 <span class="fw-bold text-danger fs-5">${item.total}</span>
+                            </div>
+                            <div class="mt-2 text-end">
+                                <a href="tracking.html?order_id=${String(item.order_id).split(',')[0].replace(/[^0-9]/g, '')}&status=PENDING" class="btn btn-sm btn-outline-info rounded-pill px-3">
+                                    <i class="fa-solid fa-truck-fast me-1"></i>Tra Cứu Vận Chuyển
+                                </a>
                             </div>
                         </div>
                     </div>

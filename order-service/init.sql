@@ -1,7 +1,9 @@
-CREATE DATABASE IF NOT EXISTS order_db;
+CREATE DATABASE IF NOT EXISTS order_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE order_db;
 
-CREATE TABLE IF NOT EXISTS orders (
+DROP TABLE IF EXISTS orders;
+
+CREATE TABLE orders (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     product_id INT NOT NULL,
@@ -9,9 +11,14 @@ CREATE TABLE IF NOT EXISTS orders (
     total_price DECIMAL(10, 2) NOT NULL,
     status VARCHAR(20) DEFAULT 'PENDING',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
-INSERT INTO orders (user_id, product_id, quantity, total_price, status) VALUES
-(1, 1, 1, 2500000.00, 'COMPLETED'),
-(1, 2, 2, 900000.00, 'SHIPPING'),
-(1, 3, 1, 650000.00, 'PENDING');
+INSERT INTO orders (id, user_id, product_id, quantity, total_price, status, created_at) VALUES
+(1, 2, 1, 1, 2500000.00, 'COMPLETED', '2026-10-15 08:30:00'),
+(2, 2, 2, 2, 900000.00, 'COMPLETED', '2026-10-15 14:15:00'),
+(3, 2, 4, 1, 3200000.00, 'SHIPPING', '2026-10-16 09:20:00'),
+(4, 2, 3, 1, 650000.00, 'SHIPPING', '2026-10-16 16:45:00'),
+(5, 2, 5, 1, 1850000.00, 'PENDING', '2026-10-17 08:10:00'),
+(6, 2, 6, 2, 700000.00, 'PENDING', '2026-10-17 10:25:00'),
+(7, 2, 7, 1, 1200000.00, 'CANCELLED', '2026-10-16 11:00:00'),
+(8, 2, 9, 1, 490000.00, 'CANCELLED', '2026-10-17 09:00:00');

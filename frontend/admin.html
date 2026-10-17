@@ -78,7 +78,7 @@
             background-color: #f8f9fa;
         }
         .img-preview-box {
-            max-height: 160px;
+            max-height: 150px;
             max-width: 100%;
             object-fit: contain;
             border-radius: 8px;
@@ -93,9 +93,7 @@
     <!-- THANH TRÊN CÙNG (TOPBAR) -->
     <div class="admin-topbar py-1 border-bottom">
         <div class="container-fluid px-4 d-flex justify-content-between align-items-center">
-            <div class="d-flex align-items-center gap-2">
-                <span class="badge bg-primary"><i class="fa-solid fa-shield-halved me-1"></i>HỆ THỐNG QUẢN TRỊ</span>
-            </div>
+            <div></div>
             <div class="d-flex align-items-center gap-3">
                 <span id="admin-user-display" class="text-white fw-bold">
                     <i class="fa-solid fa-user-shield me-1"></i> QTV (admin123@gmail.com)
@@ -113,15 +111,18 @@
             <a class="navbar-brand fw-bold text-primary fs-4 d-flex align-items-center" href="#">
                 <i class="fa-solid fa-bolt text-warning me-2"></i>SPORTS SHOP <span class="badge bg-dark ms-2 fs-6">TRANG QUẢN TRỊ</span>
             </a>
-            <div class="d-flex gap-2">
-                <a href="tracking.html" class="btn btn-outline-primary btn-sm rounded-pill px-3">
-                    <i class="fa-solid fa-truck-fast me-1"></i> Tra Cứu Vận Đơn
-                </a>
+            <div class="d-flex align-items-center gap-2">
                 <a href="index.html" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
                     <i class="fa-solid fa-store me-1"></i> Xem Cửa Hàng
                 </a>
+                <a href="tracking.html" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                    <i class="fa-solid fa-truck-fast me-1"></i> Tra Cứu Vận Đơn
+                </a>
                 <button class="btn btn-primary btn-sm rounded-pill px-3" onclick="loadAllData()">
                     <i class="fa-solid fa-arrows-rotate me-1"></i> Làm Mới Dữ Liệu
+                </button>
+                <button class="btn btn-danger btn-sm rounded-pill px-3" onclick="handleAdminLogout()">
+                    <i class="fa-solid fa-right-from-bracket me-1"></i> Đăng Xuất
                 </button>
             </div>
         </div>
@@ -221,22 +222,22 @@
                                 <!-- Tìm kiếm từ khóa -->
                                 <input type="text" id="search-order-input" class="form-control form-control-sm" style="max-width: 170px;" placeholder="Mã đơn, User ID...">
                                 
-                                <!-- Lọc theo Trạng thái -->
+                                <!-- Lọc theo Trạng thái (100% tiếng Việt thuần không ngoặc đơn) -->
                                 <select id="filter-order-status" class="form-select form-select-sm" style="max-width: 170px;">
                                     <option value="ALL">Tất cả trạng thái</option>
-                                    <option value="PENDING">Chờ xử lý (PENDING)</option>
-                                    <option value="SHIPPING">Đang giao (SHIPPING)</option>
-                                    <option value="COMPLETED">Hoàn tất (COMPLETED)</option>
-                                    <option value="CANCELLED">Hủy / Từ chối (CANCELLED)</option>
+                                    <option value="PENDING">Chờ xử lý</option>
+                                    <option value="SHIPPING">Đang giao</option>
+                                    <option value="COMPLETED">Hoàn tất</option>
+                                    <option value="CANCELLED">Đã hủy / Từ chối</option>
                                 </select>
 
                                 <!-- Lọc khoảng thời gian Từ ngày - Đến ngày -->
                                 <div class="d-flex align-items-center gap-1">
-                                    <label for="filter-order-from" class="small text-muted text-nowrap">Từ:</label>
+                                    <label for="filter-order-from" class="small text-muted text-nowrap">Từ ngày:</label>
                                     <input type="date" id="filter-order-from" class="form-control form-control-sm" style="max-width: 135px;">
                                 </div>
                                 <div class="d-flex align-items-center gap-1">
-                                    <label for="filter-order-to" class="small text-muted text-nowrap">Đến:</label>
+                                    <label for="filter-order-to" class="small text-muted text-nowrap">Đến ngày:</label>
                                     <input type="date" id="filter-order-to" class="form-control form-control-sm" style="max-width: 135px;">
                                 </div>
 
@@ -267,7 +268,7 @@
                                 </tr>
                             </thead>
                             <tbody id="admin-orders-tbody">
-                                <tr><td colspan="8" class="text-center py-4 text-muted">Đang kết nối Order Service...</td></tr>
+                                <tr><td colspan="8" class="text-center py-4 text-muted">Đang kết nối Dịch vụ Đơn Hàng...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -308,7 +309,7 @@
                                 </tr>
                             </thead>
                             <tbody id="admin-products-tbody">
-                                <tr><td colspan="7" class="text-center py-4 text-muted">Đang kết nối Product Service...</td></tr>
+                                <tr><td colspan="7" class="text-center py-4 text-muted">Đang kết nối Dịch vụ Sản Phẩm...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -331,7 +332,6 @@
                                 <tr>
                                     <th>Mã</th>
                                     <th>Tên Đăng Nhập</th>
-                                    <th>Họ Và Tên</th>
                                     <th>Email</th>
                                     <th>Vai Trò</th>
                                     <th>Trạng Thái</th>
@@ -339,7 +339,7 @@
                                 </tr>
                             </thead>
                             <tbody id="admin-users-tbody">
-                                <tr><td colspan="7" class="text-center py-4 text-muted">Đang kết nối User Service...</td></tr>
+                                <tr><td colspan="6" class="text-center py-4 text-muted">Đang kết nối Dịch vụ Người Dùng...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -349,7 +349,7 @@
 
     </div>
 
-    <!-- MODAL 1: THÊM SẢN PHẨM MỚI -->
+    <!-- MODAL 1: THÊM SẢN PHẨM MỚI (CHỈ NHẬN FILE TỪ MÁY) -->
     <div class="modal fade" id="addProductModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -365,40 +365,29 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label small text-muted fw-semibold">Giá bán (VNĐ) *</label>
-                            <input type="number" id="prod-price" class="form-control" min="1000" placeholder="Ví dụ: 500000" required>
+                            <input type="number" id="prod-price" class="form-control" min="1000" placeholder="Nhập giá bán" required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label small text-muted fw-semibold">Số lượng nhập kho *</label>
-                            <input type="number" id="prod-stock" class="form-control" min="0" placeholder="Ví dụ: 50" required>
+                            <input type="number" id="prod-stock" class="form-control" min="0" placeholder="Nhập số lượng tồn kho" required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label small text-muted fw-semibold">Mô tả sản phẩm *</label>
-                            <textarea id="prod-desc" class="form-control" rows="2" placeholder="Nhập mô tả chi tiết sản phẩm" required></textarea>
+                            <textarea id="prod-desc" class="form-control" rows="2" placeholder="Nhập mô tả sản phẩm" required></textarea>
                         </div>
                         
-                        <!-- CHỌN ẢNH TỪ MÁY HOẶC URL -->
+                        <!-- CHỌN ẢNH TỪ MÁY TÍNH (DUY NHẤT 1 Ô) -->
                         <div class="mb-3">
                             <label class="form-label small text-muted fw-semibold">Hình ảnh sản phẩm *</label>
+                            <input type="file" id="prod-image-file" class="form-control" accept="image/*" onchange="handleAddImageFile(event)" required>
                             
-                            <!-- Cách 1: Chọn từ máy tính -->
-                            <div class="mb-2">
-                                <label class="small text-secondary mb-1"><i class="fa-solid fa-upload me-1"></i>Cách 1: Chọn tệp ảnh từ máy tính (Tự động chuyển Base64)</label>
-                                <input type="file" id="prod-image-file" class="form-control form-control-sm" accept="image/*" onchange="handleAddFileSelect(event)">
-                            </div>
-
-                            <!-- Cách 2: Nhập link URL online -->
-                            <div class="mb-2">
-                                <label class="small text-secondary mb-1"><i class="fa-solid fa-link me-1"></i>Cách 2: Hoặc dán link ảnh online / đường dẫn</label>
-                                <input type="text" id="prod-image-url" class="form-control form-control-sm" placeholder="https://... hoặc images/shoe1.png" oninput="handleAddUrlChange(event)">
-                            </div>
-
-                            <!-- Dữ liệu ảnh thực tế để gửi lên backend -->
-                            <input type="hidden" id="prod-image-base64" required>
+                            <!-- Chuỗi Base64 ẩn -->
+                            <input type="hidden" id="prod-image-base64">
 
                             <!-- Khung xem trước ảnh -->
                             <div id="add-image-preview-container" class="mt-2 text-center d-none">
                                 <img id="add-image-preview" src="" alt="Xem trước ảnh" class="img-preview-box">
-                                <div class="small text-success mt-1"><i class="fa-solid fa-circle-check me-1"></i>Đã tải ảnh thành công</div>
+                                <div class="small text-success mt-1"><i class="fa-solid fa-circle-check me-1"></i>Đã chọn tệp ảnh thành công</div>
                             </div>
                         </div>
 
@@ -409,7 +398,7 @@
         </div>
     </div>
 
-    <!-- MODAL 2: CHỈNH SỬA SẢN PHẨM / NHẬP KHO -->
+    <!-- MODAL 2: CHỈNH SỬA SẢN PHẨM / NHẬP KHO (CHỈ NHẬN FILE TỪ MÁY) -->
     <div class="modal fade" id="editProductModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -425,7 +414,7 @@
                             <input type="text" id="edit-prod-name" class="form-control" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label small text-muted fw-semibold">Giá bán (VNĐ) *</label>
+                            <label class="form-label small text-muted fw-semibold">Đơn giá (VNĐ) *</label>
                             <input type="number" id="edit-prod-price" class="form-control" min="1000" required>
                         </div>
                         <div class="mb-3">
@@ -437,22 +426,10 @@
                             <textarea id="edit-prod-desc" class="form-control" rows="2" placeholder="Mô tả sản phẩm"></textarea>
                         </div>
 
-                        <!-- CẬP NHẬT ẢNH MỚI (TỪ MÁY HOẶC URL) -->
+                        <!-- CẬP NHẬT ẢNH MỚI TỪ MÁY TÍNH -->
                         <div class="mb-3">
-                            <label class="form-label small text-muted fw-semibold">Hình ảnh sản phẩm</label>
-                            
-                            <!-- Cách 1: Chọn từ máy tính -->
-                            <div class="mb-2">
-                                <label class="small text-secondary mb-1"><i class="fa-solid fa-upload me-1"></i>Chọn tệp ảnh từ máy tính (để thay ảnh mới)</label>
-                                <input type="file" id="edit-prod-image-file" class="form-control form-control-sm" accept="image/*" onchange="handleEditFileSelect(event)">
-                            </div>
-
-                            <!-- Cách 2: Nhập link URL online -->
-                            <div class="mb-2">
-                                <label class="small text-secondary mb-1"><i class="fa-solid fa-link me-1"></i>Hoặc cập nhật link URL online</label>
-                                <input type="text" id="edit-prod-image-url" class="form-control form-control-sm" placeholder="https://... hoặc images/..." oninput="handleEditUrlChange(event)">
-                            </div>
-
+                            <label class="form-label small text-muted fw-semibold">Hình ảnh sản phẩm (Chọn tệp từ máy để thay đổi)</label>
+                            <input type="file" id="edit-prod-image-file" class="form-control" accept="image/*" onchange="handleEditImageFile(event)">
                             <input type="hidden" id="edit-prod-image-base64">
 
                             <!-- Khung xem trước ảnh hiện tại / mới -->
@@ -497,12 +474,10 @@
                 return;
             }
 
-            // Hỗ trợ trường hợp user bị lồng dạng { data: { ... } } hoặc { user: { ... } }
             if (user && (user.data || user.user) && typeof (user.data || user.user) === 'object' && !user.role) {
                 user = user.data || user.user;
             }
 
-            // Chuẩn hóa và kiểm tra quyền:
             const role = String(user.role || '').toUpperCase().trim();
             const username = String(user.username || '').toLowerCase().trim();
 
@@ -512,7 +487,6 @@
                 return;
             }
 
-            // Chuẩn hóa role về ADMIN trong phiên lưu trữ
             user.role = 'ADMIN';
             localStorage.setItem('currentUser', JSON.stringify(user));
 
@@ -539,7 +513,6 @@
             updateServiceSummaryUI();
         }
 
-        // Cập nhật trạng thái 3 Microservices trên thẻ KPI bằng Tiếng Việt
         function updateServiceHealth(serviceKey, isOnline, latencyMs) {
             serviceStatus[serviceKey] = isOnline;
             const badge = document.getElementById(`health-${serviceKey}`);
@@ -584,11 +557,10 @@
                 updateServiceHealth('order', true, latency);
 
                 const list = json.data || (Array.isArray(json) ? json : []);
-                // Đồng bộ trạng thái đã chỉnh sửa cục bộ (nếu có)
                 const savedOverrides = JSON.parse(localStorage.getItem('adminOrderOverrides') || '{}');
                 allOrders = list.map(o => ({
                     ...o,
-                    status: (savedOverrides[o.id] !== undefined ? savedOverrides[o.id] : (savedOverrides[String(o.id)] !== undefined ? savedOverrides[String(o.id)] : o.status)) || 'COMPLETED'
+                    status: (savedOverrides[o.id] !== undefined ? savedOverrides[o.id] : (savedOverrides[String(o.id)] !== undefined ? savedOverrides[String(o.id)] : o.status)) || 'PENDING'
                 }));
 
                 renderOrdersTable();
@@ -599,7 +571,6 @@
             }
         }
 
-        // Hàm đặt lại bộ lọc đơn hàng
         function resetOrderFilters() {
             const searchInput = document.getElementById('search-order-input');
             const statusSelect = document.getElementById('filter-order-status');
@@ -621,12 +592,9 @@
             const fromDate = document.getElementById('filter-order-from')?.value || '';
             const toDate = document.getElementById('filter-order-to')?.value || '';
 
-            // Lọc danh sách theo 3 tiêu chí: Từ khóa, Trạng thái, Khoảng thời gian (Từ ngày - Đến ngày)
             const filtered = allOrders.filter(o => {
-                // 1. Lọc theo trạng thái đơn
                 const matchStatus = statusFilter === 'ALL' || o.status === statusFilter;
 
-                // 2. Lọc theo từ khóa tìm kiếm (Mã đơn, User ID, ID sản phẩm, Tên sản phẩm)
                 const prodObj = allProducts.find(p => Number(p.id) === Number(o.product_id));
                 const prodName = prodObj ? prodObj.name.toLowerCase() : '';
                 const matchKw = !keyword || 
@@ -635,20 +603,14 @@
                     String(o.product_id).includes(keyword) ||
                     prodName.includes(keyword);
 
-                // 3. Lọc theo khoảng ngày (YYYY-MM-DD)
                 let matchDate = true;
                 const orderDateStr = (o.created_at || '').split(' ')[0] || '';
-                if (fromDate && orderDateStr) {
-                    if (orderDateStr < fromDate) matchDate = false;
-                }
-                if (toDate && orderDateStr) {
-                    if (orderDateStr > toDate) matchDate = false;
-                }
+                if (fromDate && orderDateStr && orderDateStr < fromDate) matchDate = false;
+                if (toDate && orderDateStr && orderDateStr > toDate) matchDate = false;
 
                 return matchStatus && matchKw && matchDate;
             });
 
-            // 4. Tính toán lại Tổng Doanh Thu theo kết quả lọc hiển thị (chỉ cộng các đơn không bị CANCELLED)
             let totalRev = 0;
             filtered.forEach(o => {
                 if (o.status !== 'CANCELLED') {
@@ -656,7 +618,6 @@
                 }
             });
 
-            // 5. Cập nhật thẻ thống kê KPI
             document.getElementById('stat-orders').innerText = filtered.length;
             document.getElementById('badge-total-orders').innerText = `${filtered.length} đơn`;
             document.getElementById('stat-revenue').innerText = `${totalRev.toLocaleString('vi-VN')} đ`;
@@ -692,7 +653,7 @@
                     statusLabel = 'Đang giao';
                 } else if (o.status === 'CANCELLED') {
                     badgeClass = 'bg-danger';
-                    statusLabel = 'Đã hủy';
+                    statusLabel = 'Đã hủy / Từ chối';
                 } else if (o.status === 'COMPLETED') {
                     badgeClass = 'bg-success';
                     statusLabel = 'Hoàn tất';
@@ -712,16 +673,16 @@
                         <td class="small text-muted">${o.created_at || 'Mới tạo'}</td>
                         <td class="text-end">
                             <div class="btn-group btn-group-sm">
-                                <button class="btn btn-outline-primary" title="Giao hàng (SHIPPING)" onclick="changeOrderStatus(${o.id}, 'SHIPPING')">
+                                <button class="btn btn-outline-primary" title="Đang giao" onclick="changeOrderStatus(${o.id}, 'SHIPPING')">
                                     <i class="fa-solid fa-truck"></i>
                                 </button>
-                                <button class="btn btn-outline-success" title="Hoàn tất (COMPLETED)" onclick="changeOrderStatus(${o.id}, 'COMPLETED')">
+                                <button class="btn btn-outline-success" title="Hoàn tất" onclick="changeOrderStatus(${o.id}, 'COMPLETED')">
                                     <i class="fa-solid fa-check"></i>
                                 </button>
-                                <button class="btn btn-outline-danger" title="Hủy / Từ chối (CANCELLED)" onclick="changeOrderStatus(${o.id}, 'CANCELLED')">
+                                <button class="btn btn-outline-danger" title="Hủy đơn" onclick="changeOrderStatus(${o.id}, 'CANCELLED')">
                                     <i class="fa-solid fa-ban"></i>
                                 </button>
-                                <a href="tracking.html?order_id=${o.id}&status=${encodeURIComponent(o.status)}" class="btn btn-outline-secondary" title="Xem hành trình vận đơn">
+                                <a href="tracking.html?order_id=${o.id}&status=${encodeURIComponent(o.status)}" class="btn btn-outline-secondary" title="Tra cứu vận đơn">
                                     <i class="fa-solid fa-location-arrow"></i>
                                 </a>
                             </div>
@@ -734,19 +695,16 @@
         async function changeOrderStatus(orderId, newStatus) {
             const idNum = Number(orderId);
             
-            // 1. Cập nhật ngay trong mảng allOrders của Admin
             const order = allOrders.find(o => Number(o.id) === idNum);
             if (order) {
                 order.status = newStatus;
             }
 
-            // 2. Lưu đè vào localStorage với cả key String và Number để tracking.html đọc chắc chắn trúng
             const overrides = JSON.parse(localStorage.getItem('adminOrderOverrides') || '{}');
             overrides[idNum] = newStatus;
             overrides[String(idNum)] = newStatus;
             localStorage.setItem('adminOrderOverrides', JSON.stringify(overrides));
 
-            // 3. Gửi API cập nhật vào backend Order Service
             try {
                 await fetch(`/api/orders/${idNum}`, {
                     method: 'PUT',
@@ -757,7 +715,6 @@
                 console.warn("Chưa thể kết nối PUT /api/orders, đã lưu qua localStorage override.");
             }
 
-            // 4. Vẽ lại bảng Admin
             renderOrdersTable();
         }
 
@@ -773,7 +730,6 @@
                 updateServiceHealth('product', true, latency);
 
                 const list = Array.isArray(json) ? json : (json.data || []);
-                // Áp dụng các chỉnh sửa/xóa cục bộ nếu Backend chưa có PUT/DELETE
                 const editedMap = JSON.parse(localStorage.getItem('adminProductEdits') || '{}');
                 const deletedIds = JSON.parse(localStorage.getItem('adminProductDeleted') || '[]');
 
@@ -782,7 +738,6 @@
                     .map(p => editedMap[p.id] ? { ...p, ...editedMap[p.id] } : p);
 
                 renderProductsTable();
-                // Cập nhật lại tên sản phẩm bên bảng Đơn hàng nếu đã tải xong
                 if (allOrders.length > 0) renderOrdersTable();
             } catch (err) {
                 updateServiceHealth('product', false, 0);
@@ -820,7 +775,6 @@
                 if (stock === 0) stockBadge = '<span class="badge bg-dark">Hết hàng</span>';
                 else if (stock <= 5) stockBadge = '<span class="badge bg-danger">Sắp hết hàng</span>';
 
-                // Hiển thị ảnh thu nhỏ (thumbnail)
                 let imgHtml = '';
                 if (p.image) {
                     imgHtml = `<img src="${p.image}" alt="${p.name}" class="prod-thumbnail" onerror="this.onerror=null; this.src='https://via.placeholder.com/45?text=Ảnh';">`;
@@ -849,65 +803,42 @@
             });
         }
 
-        // ==================== XỬ LÝ ẢNH BASE64 & LINK ONLINE (MODAL THÊM SẢN PHẨM) ====================
-        function handleAddFileSelect(e) {
+        // ==================== XỬ LÝ ẢNH BASE64 (MODAL THÊM SẢN PHẨM) ====================
+        function handleAddImageFile(e) {
             const file = e.target.files[0];
             if (!file) return;
             const reader = new FileReader();
             reader.onload = function(evt) {
                 const base64 = evt.target.result;
                 document.getElementById('prod-image-base64').value = base64;
-                document.getElementById('prod-image-url').value = ''; // xóa ô URL nếu đã chọn file
-                showPreview('add-image-preview', 'add-image-preview-container', base64);
+                const previewImg = document.getElementById('add-image-preview');
+                const previewBox = document.getElementById('add-image-preview-container');
+                if (previewImg && previewBox) {
+                    previewImg.src = base64;
+                    previewBox.classList.remove('d-none');
+                }
             };
             reader.readAsDataURL(file);
         }
 
-        function handleAddUrlChange(e) {
-            const url = e.target.value.trim();
-            if (url) {
-                document.getElementById('prod-image-base64').value = url;
-                document.getElementById('prod-image-file').value = ''; // reset file nếu nhập URL
-                showPreview('add-image-preview', 'add-image-preview-container', url);
-            } else {
-                document.getElementById('prod-image-base64').value = '';
-                document.getElementById('add-image-preview-container').classList.add('d-none');
-            }
-        }
-
-        // ==================== XỬ LÝ ẢNH BASE64 & LINK ONLINE (MODAL SỬA SẢN PHẨM) ====================
-        function handleEditFileSelect(e) {
+        // ==================== XỬ LÝ ẢNH BASE64 (MODAL SỬA SẢN PHẨM) ====================
+        function handleEditImageFile(e) {
             const file = e.target.files[0];
             if (!file) return;
             const reader = new FileReader();
             reader.onload = function(evt) {
                 const base64 = evt.target.result;
                 document.getElementById('edit-prod-image-base64').value = base64;
-                document.getElementById('edit-prod-image-url').value = '';
-                showPreview('edit-image-preview', 'edit-image-preview-container', base64);
+                const previewImg = document.getElementById('edit-image-preview');
+                const previewBox = document.getElementById('edit-image-preview-container');
+                if (previewImg && previewBox) {
+                    previewImg.src = base64;
+                    previewBox.classList.remove('d-none');
+                }
             };
             reader.readAsDataURL(file);
         }
 
-        function handleEditUrlChange(e) {
-            const url = e.target.value.trim();
-            if (url) {
-                document.getElementById('edit-prod-image-base64').value = url;
-                document.getElementById('edit-prod-image-file').value = '';
-                showPreview('edit-image-preview', 'edit-image-preview-container', url);
-            }
-        }
-
-        function showPreview(imgId, containerId, src) {
-            const img = document.getElementById(imgId);
-            const container = document.getElementById(containerId);
-            if (img && container) {
-                img.src = src;
-                container.classList.remove('d-none');
-            }
-        }
-
-        // Thêm sản phẩm mới vào Product Service
         async function handleCreateProduct(e) {
             e.preventDefault();
             const name = document.getElementById('prod-name').value.trim();
@@ -917,7 +848,7 @@
             const image = document.getElementById('prod-image-base64').value.trim();
 
             if (!image) {
-                alert("Vui lòng chọn ảnh từ máy tính hoặc nhập link ảnh online!");
+                alert("Vui lòng chọn tệp ảnh từ máy tính!");
                 return;
             }
 
@@ -942,7 +873,6 @@
             }
         }
 
-        // Mở Modal sửa sản phẩm (cho phép sửa đầy đủ: Tên, Giá, Tồn kho, Mô tả, Ảnh)
         function openEditProductModal(productId) {
             const prod = allProducts.find(p => Number(p.id) === Number(productId));
             if (!prod) return;
@@ -953,27 +883,22 @@
             document.getElementById('edit-prod-stock').value = prod.stock;
             document.getElementById('edit-prod-desc').value = prod.description || '';
 
-            // Reset input file và gán ảnh hiện tại
             document.getElementById('edit-prod-image-file').value = '';
             const existingImage = prod.image || '';
             document.getElementById('edit-prod-image-base64').value = existingImage;
 
-            if (existingImage && !existingImage.startsWith('data:image')) {
-                document.getElementById('edit-prod-image-url').value = existingImage;
-            } else {
-                document.getElementById('edit-prod-image-url').value = '';
-            }
-
-            if (existingImage) {
-                showPreview('edit-image-preview', 'edit-image-preview-container', existingImage);
-            } else {
-                document.getElementById('edit-image-preview-container').classList.add('d-none');
+            const previewImg = document.getElementById('edit-image-preview');
+            const previewBox = document.getElementById('edit-image-preview-container');
+            if (existingImage && previewImg && previewBox) {
+                previewImg.src = existingImage;
+                previewBox.classList.remove('d-none');
+            } else if (previewBox) {
+                previewBox.classList.add('d-none');
             }
 
             new bootstrap.Modal(document.getElementById('editProductModal')).show();
         }
 
-        // Lưu cập nhật sản phẩm (đầy đủ các trường)
         async function handleUpdateProduct(e) {
             e.preventDefault();
             const id = Number(document.getElementById('edit-prod-id').value);
@@ -985,7 +910,6 @@
 
             const payload = { id, name, price, stock, description, image };
 
-            // Gửi PUT lên Product Service
             try {
                 await fetch(`/api/products/${id}`, {
                     method: 'PUT',
@@ -994,7 +918,6 @@
                 });
             } catch (_) {}
 
-            // Đồng bộ bộ nhớ cục bộ để hiển thị tức thì
             const editedMap = JSON.parse(localStorage.getItem('adminProductEdits') || '{}');
             editedMap[id] = payload;
             localStorage.setItem('adminProductEdits', JSON.stringify(editedMap));
@@ -1010,7 +933,6 @@
             alert(`Đã cập nhật sản phẩm #${id} thành công!`);
         }
 
-        // Xóa sản phẩm
         async function handleDeleteProduct(productId) {
             const prod = allProducts.find(p => Number(p.id) === Number(productId));
             if (!prod) return;
@@ -1055,7 +977,7 @@
             } catch (err) {
                 updateServiceHealth('user', false, 0);
                 document.getElementById('admin-users-tbody').innerHTML =
-                    '<tr><td colspan="7" class="text-center py-4 text-danger"><i class="fa-solid fa-triangle-exclamation me-1"></i>Không thể kết nối đến Dịch vụ Người Dùng!</td></tr>';
+                    '<tr><td colspan="6" class="text-center py-4 text-danger"><i class="fa-solid fa-triangle-exclamation me-1"></i>Không thể kết nối đến Dịch vụ Người Dùng!</td></tr>';
             }
         }
 
@@ -1073,9 +995,15 @@
                 {
                     id: current.id || 1,
                     username: current.username || 'admin',
-                    full_name: current.full_name || 'Quản Trị Viên (QTV)',
                     email: current.email || 'admin123@gmail.com',
                     role: 'ADMIN',
+                    status: 'ACTIVE'
+                },
+                {
+                    id: 2,
+                    username: 'thinhz',
+                    email: 'thinhz@gmail.com',
+                    role: 'USER',
                     status: 'ACTIVE'
                 }
             ];
@@ -1091,18 +1019,17 @@
             const filtered = allUsers.filter(u => {
                 const uname = (u.username || '').toLowerCase();
                 const email = (u.email || '').toLowerCase();
-                const fullName = (u.full_name || '').toLowerCase();
-                return !keyword || uname.includes(keyword) || email.includes(keyword) || fullName.includes(keyword);
+                return !keyword || uname.includes(keyword) || email.includes(keyword);
             });
 
             if (filtered.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">Không tìm thấy tài khoản phù hợp.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">Không tìm thấy tài khoản phù hợp.</td></tr>';
                 return;
             }
 
             tbody.innerHTML = '';
             filtered.forEach(u => {
-                const role = (u.role || 'CUSTOMER').toUpperCase();
+                const role = (u.role || 'USER').toUpperCase();
                 const status = statusMap[u.id] || u.status || 'ACTIVE';
                 const isLocked = status === 'LOCKED';
 
@@ -1113,7 +1040,6 @@
                     <tr>
                         <td><strong>#${u.id}</strong></td>
                         <td><span class="fw-bold">${u.username}</span></td>
-                        <td>${u.full_name || u.username}</td>
                         <td>${u.email || 'Chưa cập nhật'}</td>
                         <td>
                             <span class="badge ${role === 'ADMIN' ? 'bg-danger' : 'bg-info text-dark'}">${roleLabel}</span>
