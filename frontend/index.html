@@ -864,51 +864,63 @@
         }
 
         async function handleLoginSubmit(e) {
-    e.preventDefault();
-    const usernameInput = document.getElementById('auth-login-user') || document.getElementById('auth-user');
-    const passwordInput = document.getElementById('auth-login-pass') || document.getElementById('auth-pass');
+            e.preventDefault();
+            const usernameInput = document.getElementById('auth-login-user') || document.getElementById('auth-user');
+            const passwordInput = document.getElementById('auth-login-pass') || document.getElementById('auth-pass');
 
-    const username = usernameInput ? usernameInput.value.trim() : '';
-    const password = passwordInput ? passwordInput.value : '';
+            const username = usernameInput ? usernameInput.value.trim() : '';
+            const password = passwordInput ? passwordInput.value : '';
 
-    if (!username || !password) {
-        alert("Vui lòng nhập đầy đủ tên tài khoản và mật khẩu!");
-        return;
-    }
-
-    try {
-        const res = await fetch('/api/users/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password })
-        });
-        
-        const data = await res.json();
-
-        if (res.ok) {
-            // Lấy thông tin user trả về từ backend
-            const user = data.user || data;
-
-            // Lưu phiên đăng nhập vào LocalStorage của trình duyệt
-            localStorage.setItem('currentUser', JSON.stringify(user));
-
-            // KIỂM TRA PHÂN QUYỀN:
-            if (user.role === 'ADMIN') {
-                alert("Đăng nhập tài khoản Quản trị viên thành công! Đang chuyển đến trang Admin...");
-                window.location.href = 'admin.html'; // Chuyển thẳng sang trang Admin
-            } else {
-                alert("Đăng nhập thành công! Chào mừng " + (user.full_name || user.username));
-                // Nếu là khách hàng bình thường: đóng modal hoặc tải lại trang
-                window.location.reload();
+            if (!username || !password) {
+                alert("Vui lòng nhập đầy đủ tên tài khoản và mật khẩu!");
+                return;
             }
-        } else {
-            alert(data.message || "Tên tài khoản hoặc mật khẩu không chính xác!");
+
+            try {
+                const res = await fetch('/api/users/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await res.json();
+
+                if (res.ok) {
+                    // Lấy thông tin user trả về từ backend (hỗ trợ cả data.data, data.user hoặc data trực tiếp)
+                    let user = data.data || data.user || data;
+                    if (typeof user !== 'object' || user === null) {
+                        user = {};
+                    }
+
+                    // Chuẩn hóa role về chữ hoa (ADMIN / CUSTOMER)
+                    const uname = (user.username || username || '').toLowerCase();
+                    const rawRole = (user.role || '').toUpperCase();
+                    if (uname === 'admin' || rawRole === 'ADMIN') {
+                        user.role = 'ADMIN';
+                    } else {
+                        user.role = rawRole || 'CUSTOMER';
+                    }
+
+                    // Lưu phiên đăng nhập vào LocalStorage của trình duyệt
+                    localStorage.setItem('currentUser', JSON.stringify(user));
+                    currentUser = user;
+
+                    // KIỂM TRA PHÂN QUYỀN VÀ ĐIỀU HƯỚNG
+                    if (user.role === 'ADMIN' || uname === 'admin') {
+                        alert("Đăng nhập tài khoản Quản trị viên thành công! Đang chuyển đến trang Admin...");
+                        window.location.href = 'admin.html'; // Tự động điều hướng sang trang Admin
+                    } else {
+                        alert("Đăng nhập thành công! Chào mừng " + (user.full_name || user.username || username));
+                        window.location.reload();
+                    }
+                } else {
+                    alert(data.message || "Tên tài khoản hoặc mật khẩu không chính xác!");
+                }
+            } catch (err) {
+                console.error("Lỗi đăng nhập:", err);
+                alert("Không thể kết nối đến User Service!");
+            }
         }
-    } catch (err) {
-        console.error("Lỗi đăng nhập:", err);
-        alert("Không thể kết nối đến User Service!");
-    }
-}
 
         // 2. Hàm xử lý Đăng ký tài khoản mới
 async function handleRegisterSubmit(e) {
@@ -1048,11 +1060,21 @@ async function handleRegisterSubmit(e) {
         function logout() {
             currentUser = null;
             loyaltyPoints = 0;
+            localStorage.removeItem('currentUser');
             updateUserDisplay();
             alert("Đã đăng xuất tài khoản.");
         }
 
         document.addEventListener('DOMContentLoaded', () => {
+            const stored = localStorage.getItem('currentUser');
+            if (stored) {
+                try {
+                    currentUser = JSON.parse(stored);
+                } catch (e) {
+                    currentUser = null;
+                }
+            }
+            updateUserDisplay();
             loadProducts();
             updateLoyaltyDisplay();
         });

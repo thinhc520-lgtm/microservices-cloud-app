@@ -31,6 +31,8 @@ services:
     build:
       context: ./frontend
     container_name: web_frontend
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro
     networks:
       - app-network
 
@@ -39,6 +41,13 @@ services:
     build:
       context: ./user-service
     container_name: app_user_service
+    environment:
+      DB_HOST: user-db
+      DB_NAME: user_db
+      DB_USER: root
+      DB_PASS: root
+    volumes:
+      - ./user-service:/var/www/html
     depends_on:
       - user-db
     networks:
@@ -60,7 +69,14 @@ services:
   product-service:
     build:
       context: ./product-service
-    #container_name: app_product_service
+    container_name: app_product_service
+    environment:
+      DB_HOST: product-db
+      DB_NAME: product_db
+      DB_USER: root
+      DB_PASS: root
+    volumes:
+      - ./product-service:/var/www/html
     depends_on:
       - product-db
     networks:
@@ -83,6 +99,13 @@ services:
     build:
       context: ./order-service
     container_name: app_order_service
+    environment:
+      DB_HOST: order-db
+      DB_NAME: order_db
+      DB_USER: root
+      DB_PASS: root
+    volumes:
+      - ./order-service:/var/www/html
     depends_on:
       - order-db
     networks:

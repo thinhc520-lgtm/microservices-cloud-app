@@ -10,3 +10,8 @@ CREATE TABLE IF NOT EXISTS orders (
     status VARCHAR(20) DEFAULT 'PENDING',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+INSERT INTO orders (user_id, product_id, quantity, total_price, status) VALUES
+(1, 1, 1, 2500000.00, 'COMPLETED'),
+(1, 2, 2, 900000.00, 'SHIPPING'),
+(1, 3, 1, 650000.00, 'PENDING');

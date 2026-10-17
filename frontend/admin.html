@@ -400,16 +400,38 @@
                 return;
             }
 
-            const user = JSON.parse(storedUser);
-            if (user.role !== 'ADMIN') {
+            let user;
+            try {
+                user = JSON.parse(storedUser);
+            } catch (e) {
+                alert("Dữ liệu đăng nhập không hợp lệ!");
+                localStorage.removeItem('currentUser');
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // Hỗ trợ trường hợp user bị lồng dạng { data: { ... } } hoặc { user: { ... } }
+            if (user && (user.data || user.user) && typeof (user.data || user.user) === 'object' && !user.role) {
+                user = user.data || user.user;
+            }
+
+            // Chuẩn hóa và kiểm tra quyền:
+            const role = String(user.role || '').toUpperCase().trim();
+            const username = String(user.username || '').toLowerCase().trim();
+
+            if (role !== 'ADMIN' && username !== 'admin') {
                 alert("Bạn không có quyền truy cập trang quản trị!");
                 window.location.href = 'index.html';
                 return;
             }
 
+            // Chuẩn hóa role về ADMIN trong phiên lưu trữ
+            user.role = 'ADMIN';
+            localStorage.setItem('currentUser', JSON.stringify(user));
+
             const display = document.getElementById('admin-user-display');
             if (display) {
-                display.innerHTML = `<i class="fa-solid fa-user-shield me-1"></i> ${user.full_name || user.username} (${user.email || 'admin123@gmail.com'})`;
+                display.innerHTML = `<i class="fa-solid fa-user-shield me-1"></i> ${user.full_name || user.username || 'Admin'} (${user.email || 'admin123@gmail.com'})`;
             }
 
             loadAllData();
@@ -760,10 +782,18 @@
         }
 
         function getDefaultUsers() {
-            const current = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            let current = {};
+            try {
+                current = JSON.parse(localStorage.getItem('currentUser') || '{}');
+                if (current && (current.data || current.user) && !current.username) {
+                    current = current.data || current.user;
+                }
+            } catch (e) {
+                current = {};
+            }
             return [
                 {
-                    id: 1,
+                    id: current.id || 1,
                     username: current.username || 'admin',
                     full_name: current.full_name || 'Quản Trị Viên (QTV)',
                     email: current.email || 'admin123@gmail.com',
