@@ -1847,7 +1847,14 @@
                     <span class="text-muted small">Tổng thanh toán:</span>
                     <span class="fw-bold text-danger fs-5">${amount.toLocaleString("vi-VN")} đ</span>
                   </div>
-                  <div class="mt-2 text-end">
+                  <div class="mt-2 text-end d-flex justify-content-end align-items-center gap-2">
+                    ${
+                      (item.status || "").toUpperCase() === "PENDING"
+                        ? `<button class="btn btn-outline-danger btn-sm rounded-pill px-3" id="btn-cancel-order" onclick="cancelUserOrder(${item.id})">
+                            <i class="fa-solid fa-ban me-1"></i>Hủy Đơn Hàng
+                          </button>`
+                        : ""
+                    }
                     <a href="tracking.html?order_id=${item.id}&status=${encodeURIComponent(item.status || "PENDING")}" class="btn btn-sm btn-outline-info rounded-pill px-3">
                       <i class="fa-solid fa-truck-fast me-1"></i>Tra Cứu Vận Chuyển
                     </a>
@@ -1882,6 +1889,49 @@
               Không thể kết nối đến Dịch vụ Đơn Hàng (Order Service)! Vui lòng thử lại sau.
             </div>
           `;
+        }
+      }
+
+      // 8. HÀM KHÁCH HÀNG TỰ HỦY ĐƠN HÀNG (KHI ĐANG Ở TRẠNG THÁI PENDING)
+      async function cancelUserOrder(orderId) {
+        if (!confirm("Bạn có chắc chắn muốn hủy đơn hàng này không?")) {
+          return;
+        }
+
+        try {
+          const idNum = Number(orderId);
+          const res = await fetch(`/api/orders/${idNum}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: "CANCELLED", order_id: idNum }),
+          });
+
+          const result = await res.json();
+          if (res.ok && (result.status === "success" || result.data)) {
+            // Đồng bộ override cho admin nếu dùng chung trình duyệt
+            try {
+              const overrides = JSON.parse(
+                localStorage.getItem("adminOrderOverrides") || "{}",
+              );
+              overrides[idNum] = "CANCELLED";
+              overrides[String(idNum)] = "CANCELLED";
+              localStorage.setItem(
+                "adminOrderOverrides",
+                JSON.stringify(overrides),
+              );
+            } catch (_) {}
+
+            alert("Đã hủy đơn hàng thành công!");
+            await openOrderTrackingModal();
+          } else {
+            alert(
+              result.message ||
+                "Không thể hủy đơn hàng vào lúc này. Vui lòng thử lại!",
+            );
+          }
+        } catch (err) {
+          console.error("Lỗi khi hủy đơn hàng:", err);
+          alert("Lỗi kết nối khi gửi yêu cầu hủy đơn hàng!");
         }
       }
 
