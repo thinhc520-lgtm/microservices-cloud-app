@@ -39,37 +39,52 @@ if ($method === 'POST' && strpos($path, 'login') !== false) {
     $stmt->execute([$identifier, $identifier]);
     $user = $stmt->fetch();
 
-    if ($user && password_verify($input['password'], $user['password'])) {
-        unset($user['password']);
-
-        // Kiểm tra thêm trạng thái của tài khoản
-        $statusStr = strtolower(trim((string)($user['status'] ?? 'active')));
-        if (isset($user['status']) && ($user['status'] == 0 || $statusStr === 'locked' || $statusStr === 'inactive' || $statusStr === 'blocked')) {
-            http_response_code(403);
-            echo json_encode([
-                "status" => "error", 
-                "message" => "Tài khoản của bạn đã bị khóa bởi Quản trị viên. Vui lòng liên hệ hỗ trợ!", 
-                "data" => null
-            ]);
-            exit;
-        }
-
-        // Chỉ khi tài khoản có trạng thái HOẠT ĐỘNG (status == 1 hoặc status === 'ACTIVE') mới cấp quyền đăng nhập thành công
-        if (isset($user['status']) && !($user['status'] == 1 || strtoupper($user['status']) === 'ACTIVE')) {
-            http_response_code(403);
-            echo json_encode([
-                "status" => "error", 
-                "message" => "Tài khoản của bạn đã bị khóa bởi Quản trị viên. Vui lòng liên hệ hỗ trợ!", 
-                "data" => null
-            ]);
-            exit;
-        }
-
-        echo json_encode(["status" => "success", "message" => "Đăng nhập thành công", "data" => $user]);
-    } else {
+    if (!$user) {
         http_response_code(401);
-        echo json_encode(["status" => "error", "message" => "Sai thông tin đăng nhập", "data" => null]);
+        echo json_encode([
+            "status" => "error",
+            "message" => "Tài khoản chưa được tạo hoặc sai thông tin đăng nhập!",
+            "data" => null
+        ]);
+        exit;
     }
+
+    if (!password_verify($input['password'], $user['password'])) {
+        http_response_code(401);
+        echo json_encode([
+            "status" => "error",
+            "message" => "Tài khoản chưa được tạo hoặc sai thông tin đăng nhập!",
+            "data" => null
+        ]);
+        exit;
+    }
+
+    unset($user['password']);
+
+    // Kiểm tra thêm trạng thái của tài khoản
+    $statusStr = strtolower(trim((string)($user['status'] ?? 'active')));
+    if (isset($user['status']) && ($user['status'] == 0 || $statusStr === 'locked' || $statusStr === 'inactive' || $statusStr === 'blocked')) {
+        http_response_code(403);
+        echo json_encode([
+            "status" => "error", 
+            "message" => "Tài khoản của bạn đã bị khóa bởi Quản trị viên. Vui lòng liên hệ hỗ trợ!", 
+            "data" => null
+        ]);
+        exit;
+    }
+
+    // Chỉ khi tài khoản có trạng thái HOẠT ĐỘNG (status == 1 hoặc status === 'ACTIVE') mới cấp quyền đăng nhập thành công
+    if (isset($user['status']) && !($user['status'] == 1 || strtoupper($user['status']) === 'ACTIVE')) {
+        http_response_code(403);
+        echo json_encode([
+            "status" => "error", 
+            "message" => "Tài khoản của bạn đã bị khóa bởi Quản trị viên. Vui lòng liên hệ hỗ trợ!", 
+            "data" => null
+        ]);
+        exit;
+    }
+
+    echo json_encode(["status" => "success", "message" => "Đăng nhập thành công", "data" => $user]);
     exit;
 }
 

@@ -676,7 +676,7 @@
                     if (res.status === 403 || (data.message && (data.message.includes("bị khóa") || data.message.includes("khóa")))) {
                         alert("Tài khoản của bạn đã bị khóa! Không thể đăng nhập.");
                     } else {
-                        alert(data.message || "Tên tài khoản hoặc mật khẩu không chính xác!");
+                        alert(data.message || "Tài khoản chưa được tạo hoặc sai thông tin đăng nhập!");
                     }
                 }
             } catch (err) {
