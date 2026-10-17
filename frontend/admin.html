@@ -542,6 +542,7 @@
         let allOrders = [];
         let allProducts = [];
         let allUsers = [];
+        let userMap = {};
         let serviceStatus = { user: false, product: false, order: false };
 
         // Kiểm tra quyền ADMIN khi vào trang
@@ -809,11 +810,13 @@
 
                 const prodObj = allProducts.find(p => Number(p.id) === Number(o.product_id));
                 const prodName = prodObj ? prodObj.name.toLowerCase() : '';
+                const uName = (userMap[o.user_id] || userMap[String(o.user_id)] || '').toLowerCase();
                 const matchKw = !keyword || 
                     String(o.id).includes(keyword) || 
                     String(o.user_id).includes(keyword) || 
                     String(o.product_id).includes(keyword) ||
-                    prodName.includes(keyword);
+                    prodName.includes(keyword) ||
+                    uName.includes(keyword);
 
                 let matchDate = true;
                 const orderDateStr = (o.created_at || '').split(' ')[0] || '';
@@ -853,6 +856,7 @@
                 const amount = Number(o.total_price || 0);
                 const prodObj = allProducts.find(p => Number(p.id) === Number(o.product_id));
                 const prodName = prodObj ? prodObj.name : `Sản phẩm #${o.product_id}`;
+                const customerDisplay = userMap[o.user_id] || userMap[String(o.user_id)] || 'User';
 
                 let badgeClass = 'bg-success';
                 let statusLabel = 'Hoàn tất';
@@ -877,7 +881,7 @@
                 tbody.innerHTML += `
                     <tr>
                         <td><strong>#${o.id}</strong></td>
-                        <td><span class="badge bg-light text-dark border"><i class="fa-solid fa-user me-1 text-primary"></i>User #${o.user_id}</span></td>
+                        <td><span class="badge bg-light text-dark border">👤 ${customerDisplay} (#${o.user_id})</span></td>
                         <td><span class="fw-semibold">${prodName}</span></td>
                         <td><span class="fw-bold">${o.quantity}</span></td>
                         <td class="text-danger fw-bold">${amount.toLocaleString('vi-VN')} đ</td>
@@ -1278,7 +1282,13 @@
                     updateServiceHealth('user', true, latency);
                     allUsers = getDefaultUsers();
                 }
+                userMap = {};
+                allUsers.forEach(u => {
+                    userMap[u.id] = u.username;
+                    userMap[String(u.id)] = u.username;
+                });
                 renderUsersTable();
+                renderOrdersTable();
             } catch (err) {
                 updateServiceHealth('user', false, 0);
                 document.getElementById('admin-users-tbody').innerHTML =
@@ -1305,7 +1315,7 @@
                     status: 'ACTIVE'
                 },
                 {
-                    id: 2,
+                    id: 4,
                     username: 'thinhz',
                     email: 'thinhz@gmail.com',
                     role: 'USER',

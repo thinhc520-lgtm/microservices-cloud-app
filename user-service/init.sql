@@ -7,13 +7,15 @@ CREATE TABLE IF NOT EXISTS users (
     password VARCHAR(255) NOT NULL,
     email VARCHAR(100) NOT NULL UNIQUE,
     role VARCHAR(50) DEFAULT 'USER',
+    status VARCHAR(20) DEFAULT 'ACTIVE',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-INSERT INTO users (username, password, email, role) VALUES
-('admin', '$2y$10$Yis7XSHix7/7964NAuihGu.L.cWPMmmnHP5bvkF4iomXG6sZ/IZIy', 'admin123@gmail.com', 'ADMIN'),
-('thinhz', '$2y$10$dfMwHoEqKdtYtgRr/xfOaOWDkbI6z4yPghT.2Y6gu/4UmtKp2cLW6', 'thinhz@gmail.com', 'USER')
+INSERT INTO users (id, username, password, email, role, status) VALUES
+(1, 'admin', '$2y$10$Yis7XSHix7/7964NAuihGu.L.cWPMmmnHP5bvkF4iomXG6sZ/IZIy', 'admin123@gmail.com', 'ADMIN', 'ACTIVE'),
+(4, 'thinhz', '$2y$10$dfMwHoEqKdtYtgRr/xfOaOWDkbI6z4yPghT.2Y6gu/4UmtKp2cLW6', 'thinhz@gmail.com', 'USER', 'ACTIVE')
 ON DUPLICATE KEY UPDATE 
-    password = VALUES(password),
-    email = VALUES(email),
-    role = VALUES(role);
+    password = VALUES(password), 
+    email = VALUES(email), 
+    role = VALUES(role), 
+    status = VALUES(status);
