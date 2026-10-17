@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Sports Shop - Hệ Thống Microservices</title>
+    <title>Sports Shop - Cửa Hàng Thể Thao</title>
     <!-- Bootstrap 5 CSS -->
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
@@ -178,7 +178,7 @@
             class="border-start ps-3 text-warning text-decoration-none fw-semibold d-flex align-items-center gap-1"
           >
             <i class="fa-solid fa-gauge-high"></i>
-            <span>Trang Admin</span>
+            <span>Quản Lý CH</span>
           </a>
 
           <!-- Đăng ký / Đăng nhập hoặc Tên User -->
@@ -1657,11 +1657,11 @@
               address: address,
               payment: payment.toUpperCase(),
               total: totalPriceText,
-              status: "Đang xử lý (PENDING)",
+              status: "Chờ xử lý",
             });
 
             alert(
-              `🎉 ĐẶT HÀNG THÀNH CÔNG!\n- Mã đơn: ${orderIdsStr}\n- Người nhận: ${fullname} (${phone})\n- Địa chỉ: ${address}\n- Thanh toán: ${payment.toUpperCase()}\n- Trạng thái: Đang xử lý (PENDING)\n- Đã tích lũy thêm: +50 Điểm Thân Thiết!\n\nHệ thống đang mở trang Theo dõi đơn hàng của bạn.`
+              `🎉 ĐẶT HÀNG THÀNH CÔNG!\n- Mã đơn: ${orderIdsStr}\n- Người nhận: ${fullname} (${phone})\n- Địa chỉ: ${address}\n- Thanh toán: ${payment.toUpperCase()}\n- Trạng thái: Chờ xử lý\n- Đã tích lũy thêm: +50 Điểm Thân Thiết!\n\nHệ thống đang mở trang Theo dõi đơn hàng của bạn.`
             );
 
             // Xóa sạch giỏ hàng sau khi đặt thành công
@@ -1731,7 +1731,7 @@
                                     <i class="fa-solid fa-receipt me-1"></i>Đơn Hàng: #${item.order_id}
                                 </span>
                                 <span class="badge bg-warning text-dark px-2 py-1">
-                                    <i class="fa-solid fa-clock me-1"></i>${item.status || "Đang xử lý (PENDING)"}
+                                    <i class="fa-solid fa-clock me-1"></i>${item.status || "Chờ xử lý"}
                                 </span>
                             </div>
                             <div class="text-muted small mb-2"><i class="fa-regular fa-clock me-1"></i>Thời gian: ${item.date}</div>
