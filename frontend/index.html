@@ -1599,10 +1599,14 @@
         const totalPriceText =
           document.getElementById("cart-total-price").innerText;
 
-        // Lấy đúng user_id của tài khoản đang đăng nhập từ localStorage
+        // Lấy đúng user_id của tài khoản đang đăng nhập từ sessionStorage
         let userId = 1;
         try {
-          const storedUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
+          const storedUser = JSON.parse(
+            sessionStorage.getItem("currentUser") ||
+            sessionStorage.getItem("user") ||
+            "{}"
+          );
           const realUser = storedUser.data || storedUser.user || storedUser;
           if (realUser && realUser.id) {
             userId = Number(realUser.id);
@@ -1828,12 +1832,17 @@
               user.role = rawRole || "CUSTOMER";
             }
 
-            localStorage.setItem("currentUser", JSON.stringify(user));
-            localStorage.setItem("user", JSON.stringify(user));
+            sessionStorage.setItem("currentUser", JSON.stringify(user));
+            sessionStorage.setItem("user", JSON.stringify(user));
             if (data.token) {
-              localStorage.setItem("token", data.token);
+              sessionStorage.setItem("token", data.token);
             }
             currentUser = user;
+
+            // Xóa sạch dữ liệu tài khoản cũ trong localStorage để không lưu phiên vĩnh viễn
+            localStorage.removeItem("currentUser");
+            localStorage.removeItem("user");
+            localStorage.removeItem("token");
 
             if (user.role === "ADMIN" || uname === "admin") {
               alert(
@@ -2003,23 +2012,45 @@
       }
 
       function logout() {
-        localStorage.removeItem('user');
-        localStorage.removeItem('currentUser');
-        localStorage.removeItem('token');
-        localStorage.removeItem('cart');
+        currentUser = null;
+        loyaltyPoints = 0;
+        sessionStorage.removeItem("user");
+        sessionStorage.removeItem("currentUser");
+        sessionStorage.removeItem("token");
         sessionStorage.clear();
+        localStorage.removeItem("user");
+        localStorage.removeItem("currentUser");
+        localStorage.removeItem("token");
+        localStorage.removeItem("cart");
         window.location.reload();
       }
 
       document.addEventListener("DOMContentLoaded", () => {
-        const stored = localStorage.getItem("currentUser") || localStorage.getItem("user");
+        // Dọn sạch tàn dư lưu ngầm ở localStorage (nếu có từ phiên trước)
+        localStorage.removeItem("currentUser");
+        localStorage.removeItem("user");
+        localStorage.removeItem("token");
+
+        // Chỉ đọc phiên đăng nhập từ sessionStorage
+        const stored =
+          sessionStorage.getItem("currentUser") || sessionStorage.getItem("user");
         if (stored) {
           try {
             currentUser = JSON.parse(stored);
+            if (
+              currentUser &&
+              (currentUser.data || currentUser.user) &&
+              !currentUser.username
+            ) {
+              currentUser = currentUser.data || currentUser.user;
+            }
           } catch (e) {
             currentUser = null;
           }
+        } else {
+          currentUser = null;
         }
+
         updateUserDisplay();
         loadProducts();
         updateLoyaltyDisplay();

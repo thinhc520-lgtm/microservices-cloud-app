@@ -138,6 +138,9 @@
 </head>
 <body>
 
+    <!-- KHUNG CHÍNH ADMIN (CHỈ HIỂN THỊ KHI CÓ PHIÊN HỢP LỆ TRONG SESSIONSTORAGE) -->
+    <div id="admin-main-wrapper" class="d-none">
+
     <!-- THANH TRÊN CÙNG (TOPBAR) -->
     <div class="admin-topbar py-1 border-bottom">
         <div class="container-fluid px-4 d-flex justify-content-between align-items-center">
@@ -396,6 +399,51 @@
         </div>
 
     </div>
+    </div><!-- /#admin-main-wrapper -->
+
+    <!-- MODAL ĐĂNG NHẬP ADMIN (HIỂN THỊ KHI CHƯA CÓ PHIÊN HOẶC HẾT HẠN PHIÊN) -->
+    <div class="modal fade" id="adminLoginModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow border-0">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title fw-bold">
+                        <i class="fa-solid fa-user-shield text-warning me-2"></i>Đăng Nhập Quản Trị Viên
+                    </h5>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="text-center mb-3">
+                        <div class="bg-warning-subtle text-warning mx-auto mb-2" style="width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.8rem;">
+                            <i class="fa-solid fa-lock"></i>
+                        </div>
+                        <h6 class="fw-bold text-dark">Khu Vực Quản Lý Cửa Hàng</h6>
+                        <p class="text-muted small mb-0">Vui lòng đăng nhập tài khoản có quyền Quản Trị (ADMIN) để tiếp tục.</p>
+                    </div>
+                    <form onsubmit="handleAdminLoginSubmit(event)">
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-muted">Tên đăng nhập hoặc Email *</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="fa-solid fa-user text-muted"></i></span>
+                                <input type="text" id="admin-login-user" class="form-control" placeholder="admin" required autofocus>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-muted">Mật khẩu *</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="fa-solid fa-key text-muted"></i></span>
+                                <input type="password" id="admin-login-pass" class="form-control" placeholder="••••••••" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 fw-bold py-2 mb-2">
+                            <i class="fa-solid fa-right-to-bracket me-1"></i> Đăng Nhập Quản Trị
+                        </button>
+                        <a href="index.html" class="btn btn-outline-secondary w-100 btn-sm">
+                            <i class="fa-solid fa-arrow-left me-1"></i> Quay về Cửa Hàng
+                        </a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- MODAL 1: THÊM SẢN PHẨM MỚI (CHỈ NHẬN FILE TỪ MÁY) -->
     <div class="modal fade" id="addProductModal" tabindex="-1">
@@ -501,21 +549,30 @@
 
         // Kiểm tra quyền ADMIN khi vào trang
         document.addEventListener('DOMContentLoaded', () => {
-            const storedUser = localStorage.getItem('currentUser') || localStorage.getItem('user');
+            checkAdminAuth();
+        });
+
+        function checkAdminAuth() {
+            // Xóa sạch dữ liệu tài khoản cũ trong localStorage để bảo đảm không giữ đăng nhập ngầm
+            localStorage.removeItem('currentUser');
+            localStorage.removeItem('user');
+            localStorage.removeItem('token');
+
+            // Chỉ đọc phiên đăng nhập từ sessionStorage
+            const storedUser = sessionStorage.getItem('currentUser') || sessionStorage.getItem('user');
             if (!storedUser) {
-                alert("Vui lòng đăng nhập với tư cách Quản trị viên!");
-                window.location.href = 'index.html';
-                return;
+                showAdminLoginForm();
+                return false;
             }
 
             let user;
             try {
                 user = JSON.parse(storedUser);
             } catch (e) {
-                alert("Dữ liệu đăng nhập không hợp lệ!");
-                localStorage.removeItem('currentUser');
-                window.location.href = 'index.html';
-                return;
+                sessionStorage.removeItem('currentUser');
+                sessionStorage.removeItem('user');
+                showAdminLoginForm();
+                return false;
             }
 
             if (user && (user.data || user.user) && typeof (user.data || user.user) === 'object' && !user.role) {
@@ -526,29 +583,116 @@
             const username = String(user.username || '').toLowerCase().trim();
 
             if (role !== 'ADMIN' && username !== 'admin') {
-                alert("Bạn không có quyền truy cập trang quản trị!");
-                window.location.href = 'index.html';
-                return;
+                sessionStorage.removeItem('currentUser');
+                sessionStorage.removeItem('user');
+                alert("Tài khoản không có quyền Quản trị viên (ADMIN)! Vui lòng đăng nhập với tài khoản Admin.");
+                showAdminLoginForm();
+                return false;
             }
 
             user.role = 'ADMIN';
-            localStorage.setItem('currentUser', JSON.stringify(user));
+            sessionStorage.setItem('currentUser', JSON.stringify(user));
+            sessionStorage.setItem('user', JSON.stringify(user));
 
             const display = document.getElementById('admin-user-display');
             if (display) {
                 display.innerHTML = `<i class="fa-solid fa-user-shield me-1"></i> ${user.full_name || user.username || 'Admin'} (${user.email || 'admin123@gmail.com'})`;
             }
 
+            // Hiển thị khung quản trị
+            const wrapper = document.getElementById('admin-main-wrapper');
+            if (wrapper) wrapper.classList.remove('d-none');
+
             loadAllData();
-        });
+            return true;
+        }
+
+        function showAdminLoginForm() {
+            // Giữ màn hình quản trị ẩn hoàn toàn
+            const wrapper = document.getElementById('admin-main-wrapper');
+            if (wrapper) wrapper.classList.add('d-none');
+
+            const modalEl = document.getElementById('adminLoginModal');
+            if (modalEl) {
+                const modal = new bootstrap.Modal(modalEl, { backdrop: 'static', keyboard: false });
+                modal.show();
+            } else {
+                alert("Vui lòng đăng nhập với tư cách Quản trị viên!");
+                window.location.href = 'index.html';
+            }
+        }
+
+        async function handleAdminLoginSubmit(e) {
+            e.preventDefault();
+            const username = document.getElementById('admin-login-user').value.trim();
+            const password = document.getElementById('admin-login-pass').value;
+
+            if (!username || !password) {
+                alert("Vui lòng nhập tên đăng nhập và mật khẩu!");
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/users/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await res.json();
+                if (res.ok) {
+                    let user = data.data || data.user || data;
+                    if (typeof user !== 'object' || user === null) user = {};
+
+                    const uname = (user.username || username || '').toLowerCase();
+                    const rawRole = (user.role || '').toUpperCase();
+                    if (uname === 'admin' || rawRole === 'ADMIN') {
+                        user.role = 'ADMIN';
+                    } else {
+                        alert("Tài khoản của bạn không có quyền Quản trị viên (ADMIN)!");
+                        return;
+                    }
+
+                    // Lưu duy nhất vào sessionStorage
+                    sessionStorage.setItem('currentUser', JSON.stringify(user));
+                    sessionStorage.setItem('user', JSON.stringify(user));
+                    if (data.token) sessionStorage.setItem('token', data.token);
+
+                    // Xóa triệt để mọi dữ liệu ở localStorage
+                    localStorage.removeItem('currentUser');
+                    localStorage.removeItem('user');
+                    localStorage.removeItem('token');
+
+                    const modalInstance = bootstrap.Modal.getInstance(document.getElementById('adminLoginModal'));
+                    if (modalInstance) modalInstance.hide();
+
+                    const wrapper = document.getElementById('admin-main-wrapper');
+                    if (wrapper) wrapper.classList.remove('d-none');
+
+                    const display = document.getElementById('admin-user-display');
+                    if (display) {
+                        display.innerHTML = `<i class="fa-solid fa-user-shield me-1"></i> ${user.full_name || user.username || 'Admin'} (${user.email || 'admin123@gmail.com'})`;
+                    }
+
+                    loadAllData();
+                } else {
+                    alert(data.message || "Tên tài khoản hoặc mật khẩu không chính xác!");
+                }
+            } catch (err) {
+                alert("Không thể kết nối đến User Service!");
+            }
+        }
 
         function handleAdminLogout() {
+            sessionStorage.removeItem('user');
+            sessionStorage.removeItem('currentUser');
+            sessionStorage.removeItem('token');
+            sessionStorage.clear();
             localStorage.removeItem('user');
             localStorage.removeItem('currentUser');
             localStorage.removeItem('token');
             localStorage.removeItem('cart');
-            sessionStorage.clear();
-            window.location.reload();
+            window.location.href = 'index.html';
         }
 
         async function loadAllData() {
@@ -1144,7 +1288,7 @@
         function getDefaultUsers() {
             let current = {};
             try {
-                current = JSON.parse(localStorage.getItem('currentUser') || '{}');
+                current = JSON.parse(sessionStorage.getItem('currentUser') || sessionStorage.getItem('user') || '{}');
                 if (current && (current.data || current.user) && !current.username) {
                     current = current.data || current.user;
                 }
