@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sports Shop - Hệ Thống Quản Trị Microservices</title>
+    <title>Sports Shop - Cổng Quản Trị Hệ Thống</title>
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome Icons -->
@@ -69,23 +69,32 @@
             border-bottom: 3px solid var(--primary-blue);
             background: transparent;
         }
-        .service-pill {
-            font-size: 0.78rem;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
+        .prod-thumbnail {
+            width: 45px;
+            height: 45px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+            background-color: #f8f9fa;
+        }
+        .img-preview-box {
+            max-height: 160px;
+            max-width: 100%;
+            object-fit: contain;
+            border-radius: 8px;
+            border: 1px dashed #ced4da;
+            padding: 4px;
+            background: #fafafa;
         }
     </style>
 </head>
 <body>
 
-    <!-- TOPBAR -->
+    <!-- THANH TRÊN CÙNG (TOPBAR) -->
     <div class="admin-topbar py-1 border-bottom">
         <div class="container-fluid px-4 d-flex justify-content-between align-items-center">
-            <div class="d-flex align-items-center gap-3">
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-primary"><i class="fa-solid fa-shield-halved me-1"></i>HỆ THỐNG QUẢN TRỊ</span>
             </div>
             <div class="d-flex align-items-center gap-3">
                 <span id="admin-user-display" class="text-white fw-bold">
@@ -98,11 +107,11 @@
         </div>
     </div>
 
-    <!-- NAVBAR CHÍNH -->
+    <!-- THANH MENU CHÍNH (NAVBAR) -->
     <nav class="navbar navbar-expand-lg navbar-admin sticky-top py-2 mb-4">
         <div class="container-fluid px-4">
             <a class="navbar-brand fw-bold text-primary fs-4 d-flex align-items-center" href="#">
-                <i class="fa-solid fa-bolt text-warning me-2"></i>SPORTS SHOP <span class="badge bg-dark ms-2 fs-6">ADMIN PORTAL</span>
+                <i class="fa-solid fa-bolt text-warning me-2"></i>SPORTS SHOP <span class="badge bg-dark ms-2 fs-6">TRANG QUẢN TRỊ</span>
             </a>
             <div class="d-flex gap-2">
                 <a href="tracking.html" class="btn btn-outline-primary btn-sm rounded-pill px-3">
@@ -121,7 +130,7 @@
     <!-- NỘI DUNG CHÍNH -->
     <div class="container-fluid px-4">
 
-        <!-- THẺ THỐNG KÊ (KPIs) -->
+        <!-- CÁC THẺ THỐNG KÊ (KPIs) -->
         <div class="row g-3 mb-4">
             <div class="col-md-3">
                 <div class="card-stat d-flex align-items-center justify-content-between">
@@ -140,7 +149,7 @@
                     <div>
                         <div class="text-muted small fw-semibold text-uppercase">Tổng Đơn Hàng</div>
                         <h4 class="fw-bold mb-0 text-primary mt-1" id="stat-orders">0</h4>
-                        <small class="text-muted" id="stat-orders-sub">Từ Order Service</small>
+                        <small class="text-muted" id="stat-orders-sub">Đơn hàng từ hệ thống</small>
                     </div>
                     <div class="stat-icon bg-primary-subtle text-primary">
                         <i class="fa-solid fa-cart-shopping"></i>
@@ -162,14 +171,14 @@
             <div class="col-md-3">
                 <div class="card-stat d-flex align-items-center justify-content-between">
                     <div>
-                        <div class="text-muted small fw-semibold text-uppercase">Trạng Thái Container</div>
+                        <div class="text-muted small fw-semibold text-uppercase">Trạng Thái Hệ Thống</div>
                         <div class="fw-bold mt-1" id="stat-services-summary">
                             <span class="text-secondary"><i class="fa-solid fa-spinner fa-spin me-1"></i>Đang kiểm tra...</span>
                         </div>
                         <div class="d-flex gap-1 mt-1 flex-wrap" id="service-badges">
-                            <span class="badge bg-secondary" id="health-user">User: ...</span>
-                            <span class="badge bg-secondary" id="health-product">Product: ...</span>
-                            <span class="badge bg-secondary" id="health-order">Order: ...</span>
+                            <span class="badge bg-secondary" id="health-user">Tài khoản: ...</span>
+                            <span class="badge bg-secondary" id="health-product">Sản phẩm: ...</span>
+                            <span class="badge bg-secondary" id="health-order">Đơn hàng: ...</span>
                         </div>
                     </div>
                     <div class="stat-icon bg-dark-subtle text-dark">
@@ -179,7 +188,7 @@
             </div>
         </div>
 
-        <!-- CÁC TAB CHỨC NĂNG -->
+        <!-- CÁC TAB CHỨC NĂNG QUẢN LÝ -->
         <ul class="nav nav-tabs mb-4" id="adminTabs" role="tablist">
             <li class="nav-item">
                 <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-orders">
@@ -202,20 +211,45 @@
             <!-- TAB 1: QUẢN LÝ ĐƠN HÀNG -->
             <div class="tab-pane fade show active" id="tab-orders">
                 <div class="table-box">
-                    <div class="row g-2 justify-content-between align-items-center mb-3">
-                        <div class="col-md-5 d-flex align-items-center gap-2">
-                            <h5 class="fw-bold mb-0">Toàn Bộ Lịch Sử Đơn Hàng</h5>
+                    <div class="row g-3 align-items-center mb-3">
+                        <div class="col-xl-3 col-lg-12 d-flex align-items-center gap-2">
+                            <h5 class="fw-bold mb-0">Lịch Sử Đơn Hàng</h5>
                             <span class="badge bg-secondary" id="badge-total-orders">0 đơn</span>
                         </div>
-                        <div class="col-md-7 d-flex gap-2 justify-content-md-end">
-                            <input type="text" id="search-order-input" class="form-control form-control-sm" style="max-width: 220px;" placeholder="Tìm mã đơn, User ID..." onkeyup="renderOrdersTable()">
-                            <select id="filter-order-status" class="form-select form-select-sm" style="max-width: 170px;" onchange="renderOrdersTable()">
-                                <option value="ALL">Tất cả trạng thái</option>
-                                <option value="PENDING">Chờ xử lý (PENDING)</option>
-                                <option value="SHIPPING">Đang giao (SHIPPING)</option>
-                                <option value="COMPLETED">Hoàn thành (COMPLETED)</option>
-                                <option value="CANCELLED">Đã hủy (CANCELLED)</option>
-                            </select>
+                        <div class="col-xl-9 col-lg-12">
+                            <div class="d-flex flex-wrap gap-2 justify-content-xl-end align-items-center">
+                                <!-- Tìm kiếm từ khóa -->
+                                <input type="text" id="search-order-input" class="form-control form-control-sm" style="max-width: 170px;" placeholder="Mã đơn, User ID...">
+                                
+                                <!-- Lọc theo Trạng thái -->
+                                <select id="filter-order-status" class="form-select form-select-sm" style="max-width: 170px;">
+                                    <option value="ALL">Tất cả trạng thái</option>
+                                    <option value="PENDING">Chờ xử lý (PENDING)</option>
+                                    <option value="SHIPPING">Đang giao (SHIPPING)</option>
+                                    <option value="COMPLETED">Hoàn tất (COMPLETED)</option>
+                                    <option value="CANCELLED">Hủy / Từ chối (CANCELLED)</option>
+                                </select>
+
+                                <!-- Lọc khoảng thời gian Từ ngày - Đến ngày -->
+                                <div class="d-flex align-items-center gap-1">
+                                    <label for="filter-order-from" class="small text-muted text-nowrap">Từ:</label>
+                                    <input type="date" id="filter-order-from" class="form-control form-control-sm" style="max-width: 135px;">
+                                </div>
+                                <div class="d-flex align-items-center gap-1">
+                                    <label for="filter-order-to" class="small text-muted text-nowrap">Đến:</label>
+                                    <input type="date" id="filter-order-to" class="form-control form-control-sm" style="max-width: 135px;">
+                                </div>
+
+                                <!-- Cụm nút Lọc & Đặt lại -->
+                                <div class="btn-group btn-group-sm">
+                                    <button type="button" class="btn btn-primary" onclick="renderOrdersTable()">
+                                        <i class="fa-solid fa-filter me-1"></i> Lọc
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary" onclick="resetOrderFilters()">
+                                        <i class="fa-solid fa-rotate-left me-1"></i> Đặt lại
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="table-responsive">
@@ -264,7 +298,8 @@
                         <table class="table table-hover align-middle">
                             <thead class="table-light">
                                 <tr>
-                                    <th>ID</th>
+                                    <th>Mã</th>
+                                    <th>Hình Ảnh</th>
                                     <th>Tên Sản Phẩm</th>
                                     <th>Giá Bán</th>
                                     <th>Số Lượng Kho</th>
@@ -273,7 +308,7 @@
                                 </tr>
                             </thead>
                             <tbody id="admin-products-tbody">
-                                <tr><td colspan="6" class="text-center py-4 text-muted">Đang kết nối Product Service...</td></tr>
+                                <tr><td colspan="7" class="text-center py-4 text-muted">Đang kết nối Product Service...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -285,17 +320,17 @@
                 <div class="table-box">
                     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
                         <div class="d-flex align-items-center gap-2">
-                            <h5 class="fw-bold mb-0">Danh Sách Người Dùng Trong Database</h5>
-                            <span class="badge bg-secondary" id="badge-total-users">1 tài khoản</span>
+                            <h5 class="fw-bold mb-0">Danh Sách Tài Khoản Hệ Thống</h5>
+                            <span class="badge bg-secondary" id="badge-total-users">0 tài khoản</span>
                         </div>
-                        <input type="text" id="search-user-input" class="form-control form-control-sm" style="max-width: 240px;" placeholder="Tìm username hoặc email..." onkeyup="renderUsersTable()">
+                        <input type="text" id="search-user-input" class="form-control form-control-sm" style="max-width: 240px;" placeholder="Tìm tên đăng nhập hoặc email..." onkeyup="renderUsersTable()">
                     </div>
                     <div class="table-responsive">
                         <table class="table table-hover align-middle">
                             <thead class="table-light">
                                 <tr>
-                                    <th>ID</th>
-                                    <th>Username</th>
+                                    <th>Mã</th>
+                                    <th>Tên Đăng Nhập</th>
                                     <th>Họ Và Tên</th>
                                     <th>Email</th>
                                     <th>Vai Trò</th>
@@ -330,20 +365,43 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label small text-muted fw-semibold">Giá bán (VNĐ) *</label>
-                            <input type="number" id="prod-price" class="form-control" min="1000" placeholder="Nhập giá bán" required>
+                            <input type="number" id="prod-price" class="form-control" min="1000" placeholder="Ví dụ: 500000" required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label small text-muted fw-semibold">Số lượng nhập kho *</label>
-                            <input type="number" id="prod-stock" class="form-control" min="0" placeholder="Nhập số lượng tồn kho" required>
+                            <input type="number" id="prod-stock" class="form-control" min="0" placeholder="Ví dụ: 50" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label small text-muted fw-semibold">Mô tả *</label>
-                            <input type="text" id="prod-desc" class="form-control" placeholder="Nhập mô tả sản phẩm" required>
+                            <label class="form-label small text-muted fw-semibold">Mô tả sản phẩm *</label>
+                            <textarea id="prod-desc" class="form-control" rows="2" placeholder="Nhập mô tả chi tiết sản phẩm" required></textarea>
                         </div>
+                        
+                        <!-- CHỌN ẢNH TỪ MÁY HOẶC URL -->
                         <div class="mb-3">
-                            <label class="form-label small text-muted fw-semibold">Hình ảnh sản phẩm (Link URL hoặc tên file) *</label>
-                            <input type="text" id="prod-image" class="form-control" placeholder="images/shoe1.png hoặc https://link-anh..." required>
+                            <label class="form-label small text-muted fw-semibold">Hình ảnh sản phẩm *</label>
+                            
+                            <!-- Cách 1: Chọn từ máy tính -->
+                            <div class="mb-2">
+                                <label class="small text-secondary mb-1"><i class="fa-solid fa-upload me-1"></i>Cách 1: Chọn tệp ảnh từ máy tính (Tự động chuyển Base64)</label>
+                                <input type="file" id="prod-image-file" class="form-control form-control-sm" accept="image/*" onchange="handleAddFileSelect(event)">
+                            </div>
+
+                            <!-- Cách 2: Nhập link URL online -->
+                            <div class="mb-2">
+                                <label class="small text-secondary mb-1"><i class="fa-solid fa-link me-1"></i>Cách 2: Hoặc dán link ảnh online / đường dẫn</label>
+                                <input type="text" id="prod-image-url" class="form-control form-control-sm" placeholder="https://... hoặc images/shoe1.png" oninput="handleAddUrlChange(event)">
+                            </div>
+
+                            <!-- Dữ liệu ảnh thực tế để gửi lên backend -->
+                            <input type="hidden" id="prod-image-base64" required>
+
+                            <!-- Khung xem trước ảnh -->
+                            <div id="add-image-preview-container" class="mt-2 text-center d-none">
+                                <img id="add-image-preview" src="" alt="Xem trước ảnh" class="img-preview-box">
+                                <div class="small text-success mt-1"><i class="fa-solid fa-circle-check me-1"></i>Đã tải ảnh thành công</div>
+                            </div>
                         </div>
+
                         <button type="submit" class="btn btn-primary w-100 fw-bold">Xác Nhận Lưu Vào Kho</button>
                     </form>
                 </div>
@@ -363,17 +421,47 @@
                     <form id="formEditProduct" onsubmit="handleUpdateProduct(event)">
                         <input type="hidden" id="edit-prod-id">
                         <div class="mb-3">
-                            <label class="form-label small text-muted fw-semibold">Tên thiết bị / Phụ kiện</label>
+                            <label class="form-label small text-muted fw-semibold">Tên thiết bị / Phụ kiện *</label>
                             <input type="text" id="edit-prod-name" class="form-control" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label small text-muted fw-semibold">Giá bán (VNĐ)</label>
+                            <label class="form-label small text-muted fw-semibold">Giá bán (VNĐ) *</label>
                             <input type="number" id="edit-prod-price" class="form-control" min="1000" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label small text-muted fw-semibold">Số lượng tồn kho</label>
+                            <label class="form-label small text-muted fw-semibold">Số lượng tồn kho *</label>
                             <input type="number" id="edit-prod-stock" class="form-control" min="0" required>
                         </div>
+                        <div class="mb-3">
+                            <label class="form-label small text-muted fw-semibold">Mô tả sản phẩm</label>
+                            <textarea id="edit-prod-desc" class="form-control" rows="2" placeholder="Mô tả sản phẩm"></textarea>
+                        </div>
+
+                        <!-- CẬP NHẬT ẢNH MỚI (TỪ MÁY HOẶC URL) -->
+                        <div class="mb-3">
+                            <label class="form-label small text-muted fw-semibold">Hình ảnh sản phẩm</label>
+                            
+                            <!-- Cách 1: Chọn từ máy tính -->
+                            <div class="mb-2">
+                                <label class="small text-secondary mb-1"><i class="fa-solid fa-upload me-1"></i>Chọn tệp ảnh từ máy tính (để thay ảnh mới)</label>
+                                <input type="file" id="edit-prod-image-file" class="form-control form-control-sm" accept="image/*" onchange="handleEditFileSelect(event)">
+                            </div>
+
+                            <!-- Cách 2: Nhập link URL online -->
+                            <div class="mb-2">
+                                <label class="small text-secondary mb-1"><i class="fa-solid fa-link me-1"></i>Hoặc cập nhật link URL online</label>
+                                <input type="text" id="edit-prod-image-url" class="form-control form-control-sm" placeholder="https://... hoặc images/..." oninput="handleEditUrlChange(event)">
+                            </div>
+
+                            <input type="hidden" id="edit-prod-image-base64">
+
+                            <!-- Khung xem trước ảnh hiện tại / mới -->
+                            <div id="edit-image-preview-container" class="mt-2 text-center d-none">
+                                <img id="edit-image-preview" src="" alt="Xem trước ảnh" class="img-preview-box">
+                                <div class="small text-muted mt-1">Ảnh hiện tại / Ảnh mới được chọn</div>
+                            </div>
+                        </div>
+
                         <button type="submit" class="btn btn-warning w-100 fw-bold text-dark">Lưu Thay Đổi</button>
                     </form>
                 </div>
@@ -451,27 +539,36 @@
             updateServiceSummaryUI();
         }
 
-        // Cập nhật trạng thái 3 Microservices trên thẻ KPI
+        // Cập nhật trạng thái 3 Microservices trên thẻ KPI bằng Tiếng Việt
         function updateServiceHealth(serviceKey, isOnline, latencyMs) {
             serviceStatus[serviceKey] = isOnline;
             const badge = document.getElementById(`health-${serviceKey}`);
-            const label = serviceKey.charAt(0).toUpperCase() + serviceKey.slice(1);
+            if (!badge) return;
+
+            const labelMap = {
+                user: 'Tài khoản',
+                product: 'Sản phẩm',
+                order: 'Đơn hàng'
+            };
+            const label = labelMap[serviceKey] || serviceKey;
+
             if (isOnline) {
                 badge.className = 'badge bg-success';
-                badge.innerHTML = `<i class="fa-solid fa-check me-1"></i>${label} (${latencyMs}ms)`;
+                badge.innerHTML = `<i class="fa-solid fa-check me-1"></i>${label}: Hoạt động (${latencyMs}ms)`;
             } else {
                 badge.className = 'badge bg-danger';
-                badge.innerHTML = `<i class="fa-solid fa-xmark me-1"></i>${label}: OFFLINE`;
+                badge.innerHTML = `<i class="fa-solid fa-xmark me-1"></i>${label}: Mất kết nối`;
             }
         }
 
         function updateServiceSummaryUI() {
             const activeCount = Object.values(serviceStatus).filter(Boolean).length;
             const summaryEl = document.getElementById('stat-services-summary');
+            if (!summaryEl) return;
             if (activeCount === 3) {
-                summaryEl.innerHTML = `<span class="text-success"><i class="fa-solid fa-circle-check me-1"></i>3/3 Services Active</span>`;
+                summaryEl.innerHTML = `<span class="text-success"><i class="fa-solid fa-circle-check me-1"></i>3/3 Dịch vụ hoạt động</span>`;
             } else {
-                summaryEl.innerHTML = `<span class="text-danger"><i class="fa-solid fa-triangle-exclamation me-1"></i>${activeCount}/3 Services Active</span>`;
+                summaryEl.innerHTML = `<span class="text-danger"><i class="fa-solid fa-triangle-exclamation me-1"></i>${activeCount}/3 Dịch vụ hoạt động</span>`;
             }
         }
 
@@ -491,41 +588,90 @@
                 const savedOverrides = JSON.parse(localStorage.getItem('adminOrderOverrides') || '{}');
                 allOrders = list.map(o => ({
                     ...o,
-                    status: savedOverrides[o.id] || o.status || 'COMPLETED'
+                    status: (savedOverrides[o.id] !== undefined ? savedOverrides[o.id] : (savedOverrides[String(o.id)] !== undefined ? savedOverrides[String(o.id)] : o.status)) || 'COMPLETED'
                 }));
 
                 renderOrdersTable();
             } catch (err) {
                 updateServiceHealth('order', false, 0);
                 document.getElementById('admin-orders-tbody').innerHTML =
-                    '<tr><td colspan="8" class="text-center py-4 text-danger"><i class="fa-solid fa-triangle-exclamation me-1"></i>Không thể kết nối đến Order Service!</td></tr>';
+                    '<tr><td colspan="8" class="text-center py-4 text-danger"><i class="fa-solid fa-triangle-exclamation me-1"></i>Không thể kết nối đến Dịch vụ Đơn Hàng!</td></tr>';
             }
+        }
+
+        // Hàm đặt lại bộ lọc đơn hàng
+        function resetOrderFilters() {
+            const searchInput = document.getElementById('search-order-input');
+            const statusSelect = document.getElementById('filter-order-status');
+            const fromInput = document.getElementById('filter-order-from');
+            const toInput = document.getElementById('filter-order-to');
+
+            if (searchInput) searchInput.value = '';
+            if (statusSelect) statusSelect.value = 'ALL';
+            if (fromInput) fromInput.value = '';
+            if (toInput) toInput.value = '';
+
+            renderOrdersTable();
         }
 
         function renderOrdersTable() {
             const tbody = document.getElementById('admin-orders-tbody');
             const keyword = (document.getElementById('search-order-input')?.value || '').toLowerCase().trim();
             const statusFilter = document.getElementById('filter-order-status')?.value || 'ALL';
+            const fromDate = document.getElementById('filter-order-from')?.value || '';
+            const toDate = document.getElementById('filter-order-to')?.value || '';
 
-            // Tính tổng doanh thu từ các đơn không bị hủy
+            // Lọc danh sách theo 3 tiêu chí: Từ khóa, Trạng thái, Khoảng thời gian (Từ ngày - Đến ngày)
+            const filtered = allOrders.filter(o => {
+                // 1. Lọc theo trạng thái đơn
+                const matchStatus = statusFilter === 'ALL' || o.status === statusFilter;
+
+                // 2. Lọc theo từ khóa tìm kiếm (Mã đơn, User ID, ID sản phẩm, Tên sản phẩm)
+                const prodObj = allProducts.find(p => Number(p.id) === Number(o.product_id));
+                const prodName = prodObj ? prodObj.name.toLowerCase() : '';
+                const matchKw = !keyword || 
+                    String(o.id).includes(keyword) || 
+                    String(o.user_id).includes(keyword) || 
+                    String(o.product_id).includes(keyword) ||
+                    prodName.includes(keyword);
+
+                // 3. Lọc theo khoảng ngày (YYYY-MM-DD)
+                let matchDate = true;
+                const orderDateStr = (o.created_at || '').split(' ')[0] || '';
+                if (fromDate && orderDateStr) {
+                    if (orderDateStr < fromDate) matchDate = false;
+                }
+                if (toDate && orderDateStr) {
+                    if (orderDateStr > toDate) matchDate = false;
+                }
+
+                return matchStatus && matchKw && matchDate;
+            });
+
+            // 4. Tính toán lại Tổng Doanh Thu theo kết quả lọc hiển thị (chỉ cộng các đơn không bị CANCELLED)
             let totalRev = 0;
-            allOrders.forEach(o => {
+            filtered.forEach(o => {
                 if (o.status !== 'CANCELLED') {
                     totalRev += Number(o.total_price || 0);
                 }
             });
-            document.getElementById('stat-orders').innerText = allOrders.length;
-            document.getElementById('badge-total-orders').innerText = `${allOrders.length} đơn`;
+
+            // 5. Cập nhật thẻ thống kê KPI
+            document.getElementById('stat-orders').innerText = filtered.length;
+            document.getElementById('badge-total-orders').innerText = `${filtered.length} đơn`;
             document.getElementById('stat-revenue').innerText = `${totalRev.toLocaleString('vi-VN')} đ`;
 
-            const filtered = allOrders.filter(o => {
-                const matchStatus = statusFilter === 'ALL' || o.status === statusFilter;
-                const matchKw = !keyword || String(o.id).includes(keyword) || String(o.user_id).includes(keyword) || String(o.product_id).includes(keyword);
-                return matchStatus && matchKw;
-            });
+            const revSubEl = document.getElementById('stat-revenue-sub');
+            if (revSubEl) {
+                if (fromDate || toDate || statusFilter !== 'ALL' || keyword) {
+                    revSubEl.innerText = "Doanh thu theo bộ lọc hiển thị";
+                } else {
+                    revSubEl.innerText = "Tính trên các đơn hợp lệ";
+                }
+            }
 
             if (filtered.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-muted">Không có đơn hàng nào khớp bộ lọc.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-muted">Không tìm thấy đơn hàng nào phù hợp với bộ lọc.</td></tr>';
                 return;
             }
 
@@ -536,9 +682,24 @@
                 const prodName = prodObj ? prodObj.name : `Sản phẩm #${o.product_id}`;
 
                 let badgeClass = 'bg-success';
-                if (o.status === 'PENDING') badgeClass = 'bg-warning text-dark';
-                else if (o.status === 'SHIPPING') badgeClass = 'bg-info text-dark';
-                else if (o.status === 'CANCELLED') badgeClass = 'bg-danger';
+                let statusLabel = 'Hoàn tất';
+
+                if (o.status === 'PENDING') {
+                    badgeClass = 'bg-warning text-dark';
+                    statusLabel = 'Chờ xử lý';
+                } else if (o.status === 'SHIPPING') {
+                    badgeClass = 'bg-info text-dark';
+                    statusLabel = 'Đang giao';
+                } else if (o.status === 'CANCELLED') {
+                    badgeClass = 'bg-danger';
+                    statusLabel = 'Đã hủy';
+                } else if (o.status === 'COMPLETED') {
+                    badgeClass = 'bg-success';
+                    statusLabel = 'Hoàn tất';
+                } else {
+                    badgeClass = 'bg-secondary';
+                    statusLabel = o.status;
+                }
 
                 tbody.innerHTML += `
                     <tr>
@@ -547,20 +708,20 @@
                         <td><span class="fw-semibold">${prodName}</span></td>
                         <td><span class="fw-bold">${o.quantity}</span></td>
                         <td class="text-danger fw-bold">${amount.toLocaleString('vi-VN')} đ</td>
-                        <td><span class="badge ${badgeClass}">${o.status}</span></td>
+                        <td><span class="badge ${badgeClass}">${statusLabel}</span></td>
                         <td class="small text-muted">${o.created_at || 'Mới tạo'}</td>
                         <td class="text-end">
                             <div class="btn-group btn-group-sm">
-                                <button class="btn btn-outline-primary" title="Đang giao hàng" onclick="changeOrderStatus(${o.id}, 'SHIPPING')">
+                                <button class="btn btn-outline-primary" title="Giao hàng (SHIPPING)" onclick="changeOrderStatus(${o.id}, 'SHIPPING')">
                                     <i class="fa-solid fa-truck"></i>
                                 </button>
-                                <button class="btn btn-outline-success" title="Hoàn tất đơn" onclick="changeOrderStatus(${o.id}, 'COMPLETED')">
+                                <button class="btn btn-outline-success" title="Hoàn tất (COMPLETED)" onclick="changeOrderStatus(${o.id}, 'COMPLETED')">
                                     <i class="fa-solid fa-check"></i>
                                 </button>
-                                <button class="btn btn-outline-danger" title="Hủy đơn hàng" onclick="changeOrderStatus(${o.id}, 'CANCELLED')">
+                                <button class="btn btn-outline-danger" title="Hủy / Từ chối (CANCELLED)" onclick="changeOrderStatus(${o.id}, 'CANCELLED')">
                                     <i class="fa-solid fa-ban"></i>
                                 </button>
-                                <a href="tracking.html?order_id=${o.id}" class="btn btn-outline-secondary" title="Xem hành trình đơn">
+                                <a href="tracking.html?order_id=${o.id}&status=${encodeURIComponent(o.status)}" class="btn btn-outline-secondary" title="Xem hành trình vận đơn">
                                     <i class="fa-solid fa-location-arrow"></i>
                                 </a>
                             </div>
@@ -570,16 +731,33 @@
             });
         }
 
-        function changeOrderStatus(orderId, newStatus) {
-            const target = allOrders.find(o => Number(o.id) === Number(orderId));
-            if (!target) return;
-            target.status = newStatus;
+        async function changeOrderStatus(orderId, newStatus) {
+            const idNum = Number(orderId);
+            
+            // 1. Cập nhật ngay trong mảng allOrders của Admin
+            const order = allOrders.find(o => Number(o.id) === idNum);
+            if (order) {
+                order.status = newStatus;
+            }
 
-            // Lưu trạng thái vào localStorage để giữ nguyên khi reload
-            const savedOverrides = JSON.parse(localStorage.getItem('adminOrderOverrides') || '{}');
-            savedOverrides[orderId] = newStatus;
-            localStorage.setItem('adminOrderOverrides', JSON.stringify(savedOverrides));
+            // 2. Lưu đè vào localStorage với cả key String và Number để tracking.html đọc chắc chắn trúng
+            const overrides = JSON.parse(localStorage.getItem('adminOrderOverrides') || '{}');
+            overrides[idNum] = newStatus;
+            overrides[String(idNum)] = newStatus;
+            localStorage.setItem('adminOrderOverrides', JSON.stringify(overrides));
 
+            // 3. Gửi API cập nhật vào backend Order Service
+            try {
+                await fetch(`/api/orders/${idNum}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: newStatus, order_id: idNum })
+                });
+            } catch (e) {
+                console.warn("Chưa thể kết nối PUT /api/orders, đã lưu qua localStorage override.");
+            }
+
+            // 4. Vẽ lại bảng Admin
             renderOrdersTable();
         }
 
@@ -609,7 +787,7 @@
             } catch (err) {
                 updateServiceHealth('product', false, 0);
                 document.getElementById('admin-products-tbody').innerHTML =
-                    '<tr><td colspan="6" class="text-center py-4 text-danger"><i class="fa-solid fa-triangle-exclamation me-1"></i>Không thể kết nối đến Product Service!</td></tr>';
+                    '<tr><td colspan="7" class="text-center py-4 text-danger"><i class="fa-solid fa-triangle-exclamation me-1"></i>Không thể kết nối đến Dịch vụ Sản Phẩm!</td></tr>';
             }
         }
 
@@ -631,7 +809,7 @@
             });
 
             if (filtered.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">Không tìm thấy sản phẩm phù hợp.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">Không tìm thấy sản phẩm phù hợp.</td></tr>';
                 return;
             }
 
@@ -642,15 +820,24 @@
                 if (stock === 0) stockBadge = '<span class="badge bg-dark">Hết hàng</span>';
                 else if (stock <= 5) stockBadge = '<span class="badge bg-danger">Sắp hết hàng</span>';
 
+                // Hiển thị ảnh thu nhỏ (thumbnail)
+                let imgHtml = '';
+                if (p.image) {
+                    imgHtml = `<img src="${p.image}" alt="${p.name}" class="prod-thumbnail" onerror="this.onerror=null; this.src='https://via.placeholder.com/45?text=Ảnh';">`;
+                } else {
+                    imgHtml = `<div class="prod-thumbnail d-flex align-items-center justify-content-center text-secondary"><i class="fa-solid fa-image"></i></div>`;
+                }
+
                 tbody.innerHTML += `
                     <tr>
                         <td><strong>#${p.id}</strong></td>
+                        <td>${imgHtml}</td>
                         <td><span class="fw-semibold">${p.name}</span></td>
                         <td class="text-primary fw-bold">${Number(p.price).toLocaleString('vi-VN')} đ</td>
                         <td class="${stock <= 5 ? 'text-danger fw-bold' : 'fw-semibold'}">${stock}</td>
                         <td>${stockBadge}</td>
                         <td class="text-end">
-                            <button class="btn btn-sm btn-outline-primary me-1" title="Sửa giá & Tồn kho" onclick="openEditProductModal(${p.id})">
+                            <button class="btn btn-sm btn-outline-primary me-1" title="Chỉnh sửa sản phẩm & kho" onclick="openEditProductModal(${p.id})">
                                 <i class="fa-solid fa-pen"></i> Sửa
                             </button>
                             <button class="btn btn-sm btn-outline-danger" title="Xóa sản phẩm" onclick="handleDeleteProduct(${p.id})">
@@ -662,6 +849,64 @@
             });
         }
 
+        // ==================== XỬ LÝ ẢNH BASE64 & LINK ONLINE (MODAL THÊM SẢN PHẨM) ====================
+        function handleAddFileSelect(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const base64 = evt.target.result;
+                document.getElementById('prod-image-base64').value = base64;
+                document.getElementById('prod-image-url').value = ''; // xóa ô URL nếu đã chọn file
+                showPreview('add-image-preview', 'add-image-preview-container', base64);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function handleAddUrlChange(e) {
+            const url = e.target.value.trim();
+            if (url) {
+                document.getElementById('prod-image-base64').value = url;
+                document.getElementById('prod-image-file').value = ''; // reset file nếu nhập URL
+                showPreview('add-image-preview', 'add-image-preview-container', url);
+            } else {
+                document.getElementById('prod-image-base64').value = '';
+                document.getElementById('add-image-preview-container').classList.add('d-none');
+            }
+        }
+
+        // ==================== XỬ LÝ ẢNH BASE64 & LINK ONLINE (MODAL SỬA SẢN PHẨM) ====================
+        function handleEditFileSelect(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const base64 = evt.target.result;
+                document.getElementById('edit-prod-image-base64').value = base64;
+                document.getElementById('edit-prod-image-url').value = '';
+                showPreview('edit-image-preview', 'edit-image-preview-container', base64);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function handleEditUrlChange(e) {
+            const url = e.target.value.trim();
+            if (url) {
+                document.getElementById('edit-prod-image-base64').value = url;
+                document.getElementById('edit-prod-image-file').value = '';
+                showPreview('edit-image-preview', 'edit-image-preview-container', url);
+            }
+        }
+
+        function showPreview(imgId, containerId, src) {
+            const img = document.getElementById(imgId);
+            const container = document.getElementById(containerId);
+            if (img && container) {
+                img.src = src;
+                container.classList.remove('d-none');
+            }
+        }
+
         // Thêm sản phẩm mới vào Product Service
         async function handleCreateProduct(e) {
             e.preventDefault();
@@ -669,7 +914,12 @@
             const price = Number(document.getElementById('prod-price').value);
             const stock = Number(document.getElementById('prod-stock').value);
             const description = document.getElementById('prod-desc').value.trim();
-            const image = document.getElementById('prod-image').value.trim();
+            const image = document.getElementById('prod-image-base64').value.trim();
+
+            if (!image) {
+                alert("Vui lòng chọn ảnh từ máy tính hoặc nhập link ảnh online!");
+                return;
+            }
 
             try {
                 const res = await fetch('/api/products', {
@@ -681,54 +931,82 @@
                     alert("Thêm sản phẩm vào kho thành công!");
                     bootstrap.Modal.getInstance(document.getElementById('addProductModal')).hide();
                     document.getElementById('formAddProduct').reset();
+                    document.getElementById('prod-image-base64').value = '';
+                    document.getElementById('add-image-preview-container').classList.add('d-none');
                     fetchProducts();
                 } else {
-                    alert("Không thể thêm sản phẩm, vui lòng kiểm tra Product Service!");
+                    alert("Không thể thêm sản phẩm, vui lòng kiểm tra Dịch vụ Sản Phẩm!");
                 }
             } catch (err) {
-                alert("Lỗi kết nối khi gửi yêu cầu đến Product Service!");
+                alert("Lỗi kết nối khi gửi yêu cầu đến Dịch vụ Sản Phẩm!");
             }
         }
 
-        // Mở Modal sửa sản phẩm
+        // Mở Modal sửa sản phẩm (cho phép sửa đầy đủ: Tên, Giá, Tồn kho, Mô tả, Ảnh)
         function openEditProductModal(productId) {
             const prod = allProducts.find(p => Number(p.id) === Number(productId));
             if (!prod) return;
+
             document.getElementById('edit-prod-id').value = prod.id;
             document.getElementById('edit-prod-name').value = prod.name;
             document.getElementById('edit-prod-price').value = prod.price;
             document.getElementById('edit-prod-stock').value = prod.stock;
+            document.getElementById('edit-prod-desc').value = prod.description || '';
+
+            // Reset input file và gán ảnh hiện tại
+            document.getElementById('edit-prod-image-file').value = '';
+            const existingImage = prod.image || '';
+            document.getElementById('edit-prod-image-base64').value = existingImage;
+
+            if (existingImage && !existingImage.startsWith('data:image')) {
+                document.getElementById('edit-prod-image-url').value = existingImage;
+            } else {
+                document.getElementById('edit-prod-image-url').value = '';
+            }
+
+            if (existingImage) {
+                showPreview('edit-image-preview', 'edit-image-preview-container', existingImage);
+            } else {
+                document.getElementById('edit-image-preview-container').classList.add('d-none');
+            }
+
             new bootstrap.Modal(document.getElementById('editProductModal')).show();
         }
 
-        // Lưu cập nhật sản phẩm
+        // Lưu cập nhật sản phẩm (đầy đủ các trường)
         async function handleUpdateProduct(e) {
             e.preventDefault();
             const id = Number(document.getElementById('edit-prod-id').value);
             const name = document.getElementById('edit-prod-name').value.trim();
             const price = Number(document.getElementById('edit-prod-price').value);
             const stock = Number(document.getElementById('edit-prod-stock').value);
+            const description = document.getElementById('edit-prod-desc').value.trim();
+            const image = document.getElementById('edit-prod-image-base64').value.trim();
 
-            // Thử gửi PUT lên Product Service, đồng thời lưu đồng bộ để hiển thị ngay
+            const payload = { id, name, price, stock, description, image };
+
+            // Gửi PUT lên Product Service
             try {
                 await fetch(`/api/products/${id}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id, name, price, stock })
+                    body: JSON.stringify(payload)
                 });
             } catch (_) {}
 
+            // Đồng bộ bộ nhớ cục bộ để hiển thị tức thì
             const editedMap = JSON.parse(localStorage.getItem('adminProductEdits') || '{}');
-            editedMap[id] = { name, price, stock };
+            editedMap[id] = payload;
             localStorage.setItem('adminProductEdits', JSON.stringify(editedMap));
 
             const idx = allProducts.findIndex(p => Number(p.id) === id);
             if (idx !== -1) {
-                allProducts[idx] = { ...allProducts[idx], name, price, stock };
+                allProducts[idx] = { ...allProducts[idx], ...payload };
             }
 
             bootstrap.Modal.getInstance(document.getElementById('editProductModal')).hide();
             renderProductsTable();
+            if (allOrders.length > 0) renderOrdersTable();
             alert(`Đã cập nhật sản phẩm #${id} thành công!`);
         }
 
@@ -750,6 +1028,7 @@
 
             allProducts = allProducts.filter(p => Number(p.id) !== Number(productId));
             renderProductsTable();
+            alert("Đã xóa sản phẩm khỏi kho!");
         }
 
         // ==================== 3. QUẢN LÝ TÀI KHOẢN (USER SERVICE) ====================
@@ -769,7 +1048,6 @@
                         allUsers = getDefaultUsers();
                     }
                 } else {
-                    // Ngay cả khi /api/users trả về 404/405 thì container user-service vẫn đang phản hồi HTTP
                     updateServiceHealth('user', true, latency);
                     allUsers = getDefaultUsers();
                 }
@@ -777,7 +1055,7 @@
             } catch (err) {
                 updateServiceHealth('user', false, 0);
                 document.getElementById('admin-users-tbody').innerHTML =
-                    '<tr><td colspan="7" class="text-center py-4 text-danger"><i class="fa-solid fa-triangle-exclamation me-1"></i>Không thể kết nối đến User Service!</td></tr>';
+                    '<tr><td colspan="7" class="text-center py-4 text-danger"><i class="fa-solid fa-triangle-exclamation me-1"></i>Không thể kết nối đến Dịch vụ Người Dùng!</td></tr>';
             }
         }
 
@@ -813,7 +1091,8 @@
             const filtered = allUsers.filter(u => {
                 const uname = (u.username || '').toLowerCase();
                 const email = (u.email || '').toLowerCase();
-                return !keyword || uname.includes(keyword) || email.includes(keyword);
+                const fullName = (u.full_name || '').toLowerCase();
+                return !keyword || uname.includes(keyword) || email.includes(keyword) || fullName.includes(keyword);
             });
 
             if (filtered.length === 0) {
@@ -827,6 +1106,9 @@
                 const status = statusMap[u.id] || u.status || 'ACTIVE';
                 const isLocked = status === 'LOCKED';
 
+                const roleLabel = role === 'ADMIN' ? 'QUẢN TRỊ VIÊN' : 'KHÁCH HÀNG';
+                const statusLabel = isLocked ? 'ĐÃ KHÓA' : 'HOẠT ĐỘNG';
+
                 tbody.innerHTML += `
                     <tr>
                         <td><strong>#${u.id}</strong></td>
@@ -834,15 +1116,15 @@
                         <td>${u.full_name || u.username}</td>
                         <td>${u.email || 'Chưa cập nhật'}</td>
                         <td>
-                            <span class="badge ${role === 'ADMIN' ? 'bg-danger' : 'bg-info text-dark'}">${role}</span>
+                            <span class="badge ${role === 'ADMIN' ? 'bg-danger' : 'bg-info text-dark'}">${roleLabel}</span>
                         </td>
                         <td>
-                            <span class="badge ${isLocked ? 'bg-secondary' : 'bg-success'}">${status}</span>
+                            <span class="badge ${isLocked ? 'bg-secondary' : 'bg-success'}">${statusLabel}</span>
                         </td>
                         <td class="text-end">
                             ${role === 'ADMIN' ? '<span class="text-muted small">Mặc định</span>' : `
                                 <button class="btn btn-sm ${isLocked ? 'btn-outline-success' : 'btn-outline-warning'}" onclick="toggleUserLock(${u.id})">
-                                    <i class="fa-solid ${isLocked ? 'fa-lock-open' : 'fa-lock'} me-1"></i>${isLocked ? 'Mở khóa' : 'Khóa'}
+                                    <i class="fa-solid ${isLocked ? 'fa-lock-open' : 'fa-lock'} me-1"></i>${isLocked ? 'Mở khóa' : 'Khóa tài khoản'}
                                 </button>
                             `}
                         </td>

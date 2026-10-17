@@ -109,5 +109,58 @@ if ($method === 'POST') {
     exit;
 }
 
+// 5. Cập nhật sản phẩm (PUT)
+if ($method === 'PUT') {
+    preg_match('/\/([0-9]+)$/', $path, $matches);
+    $input = json_decode(file_get_contents('php://input'), true);
+    $id = (int)($input['id'] ?? ($matches[1] ?? 0));
+    $name = trim($input['name'] ?? '');
+    $price = (float)($input['price'] ?? 0);
+    $stock = isset($input['stock']) ? (int)$input['stock'] : 0;
+    $description = trim($input['description'] ?? '');
+    $image = isset($input['image']) ? trim($input['image']) : null;
+
+    if ($id <= 0 || empty($name) || $price <= 0) {
+        http_response_code(400);
+        echo json_encode(["status" => "error", "message" => "Dữ liệu cập nhật không hợp lệ", "data" => null]);
+        exit;
+    }
+
+    try {
+        if ($image !== null && $image !== '') {
+            $stmt = $pdo->prepare("UPDATE products SET name = ?, description = ?, price = ?, stock = ?, image = ? WHERE id = ?");
+            $stmt->execute([$name, $description, $price, $stock, $image, $id]);
+        } else {
+            $stmt = $pdo->prepare("UPDATE products SET name = ?, description = ?, price = ?, stock = ? WHERE id = ?");
+            $stmt->execute([$name, $description, $price, $stock, $id]);
+        }
+        echo json_encode(["status" => "success", "message" => "Cập nhật sản phẩm thành công", "data" => ["id" => $id, "name" => $name, "price" => $price, "stock" => $stock]]);
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode(["status" => "error", "message" => "Lỗi cập nhật: " . $e->getMessage(), "data" => null]);
+    }
+    exit;
+}
+
+// 6. Xóa sản phẩm (DELETE)
+if ($method === 'DELETE') {
+    preg_match('/\/([0-9]+)$/', $path, $matches);
+    $id = (int)($matches[1] ?? 0);
+    if ($id <= 0) {
+        http_response_code(400);
+        echo json_encode(["status" => "error", "message" => "ID sản phẩm không hợp lệ", "data" => null]);
+        exit;
+    }
+    try {
+        $stmt = $pdo->prepare("DELETE FROM products WHERE id = ?");
+        $stmt->execute([$id]);
+        echo json_encode(["status" => "success", "message" => "Xóa sản phẩm thành công", "data" => ["id" => $id]]);
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode(["status" => "error", "message" => "Lỗi xóa sản phẩm: " . $e->getMessage(), "data" => null]);
+    }
+    exit;
+}
+
 http_response_code(404);
 echo json_encode(["status" => "error", "message" => "Endpoint không hợp lệ", "data" => null]);
