@@ -2010,9 +2010,20 @@
               window.location.reload();
             }
           } else {
-            alert(
-              data.message || "Tên tài khoản hoặc mật khẩu không chính xác!",
-            );
+            // Khi nhận mã phản hồi lỗi (status 403 hoặc data.status === 'error' do tài khoản bị khóa)
+            if (
+              res.status === 403 ||
+              (data &&
+                data.message &&
+                (data.message.includes("bị khóa") ||
+                  data.message.includes("khóa")))
+            ) {
+              alert("Tài khoản của bạn đã bị khóa! Không thể đăng nhập.");
+            } else {
+              alert(
+                data.message || "Tên tài khoản hoặc mật khẩu không chính xác!",
+              );
+            }
           }
         } catch (err) {
           console.error("Lỗi đăng nhập:", err);

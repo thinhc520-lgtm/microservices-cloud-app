@@ -41,6 +41,30 @@ if ($method === 'POST' && strpos($path, 'login') !== false) {
 
     if ($user && password_verify($input['password'], $user['password'])) {
         unset($user['password']);
+
+        // Kiểm tra thêm trạng thái của tài khoản
+        $statusStr = strtolower(trim((string)($user['status'] ?? 'active')));
+        if (isset($user['status']) && ($user['status'] == 0 || $statusStr === 'locked' || $statusStr === 'inactive' || $statusStr === 'blocked')) {
+            http_response_code(403);
+            echo json_encode([
+                "status" => "error", 
+                "message" => "Tài khoản của bạn đã bị khóa bởi Quản trị viên. Vui lòng liên hệ hỗ trợ!", 
+                "data" => null
+            ]);
+            exit;
+        }
+
+        // Chỉ khi tài khoản có trạng thái HOẠT ĐỘNG (status == 1 hoặc status === 'ACTIVE') mới cấp quyền đăng nhập thành công
+        if (isset($user['status']) && !($user['status'] == 1 || strtoupper($user['status']) === 'ACTIVE')) {
+            http_response_code(403);
+            echo json_encode([
+                "status" => "error", 
+                "message" => "Tài khoản của bạn đã bị khóa bởi Quản trị viên. Vui lòng liên hệ hỗ trợ!", 
+                "data" => null
+            ]);
+            exit;
+        }
+
         echo json_encode(["status" => "success", "message" => "Đăng nhập thành công", "data" => $user]);
     } else {
         http_response_code(401);
@@ -53,7 +77,7 @@ if ($method === 'POST' && strpos($path, 'login') !== false) {
 if ($method === 'GET') {
     preg_match('/\/([0-9]+)$/', $path, $matches);
     if (!empty($matches[1])) {
-        $stmt = $pdo->prepare("SELECT id, username, email, role, created_at FROM users WHERE id = ?");
+        $stmt = $pdo->prepare("SELECT id, username, email, role, status, created_at FROM users WHERE id = ?");
         $stmt->execute([$matches[1]]);
         $user = $stmt->fetch();
         if ($user) {
@@ -65,9 +89,27 @@ if ($method === 'GET') {
         exit;
     }
 
-    $stmt = $pdo->query("SELECT id, username, email, role, created_at FROM users ORDER BY id ASC");
+    $stmt = $pdo->query("SELECT id, username, email, role, status, created_at FROM users ORDER BY id ASC");
     echo json_encode(["status" => "success", "message" => "Danh sách người dùng", "data" => $stmt->fetchAll()]);
     exit;
+}
+
+// 4. API cập nhật trạng thái người dùng (PUT/PATCH/POST /api/users/{id})
+if (($method === 'PUT' || $method === 'PATCH' || $method === 'POST') && preg_match('/\/([0-9]+)/', $path, $matches)) {
+    $userId = (int)$matches[1];
+    $newStatus = $input['status'] ?? null;
+    if ($newStatus !== null) {
+        $statusStr = strtolower(trim((string)$newStatus));
+        $dbStatus = ($statusStr === 'active' || $newStatus == 1) ? 'ACTIVE' : 'BLOCKED';
+        $stmt = $pdo->prepare("UPDATE users SET status = ? WHERE id = ?");
+        $stmt->execute([$dbStatus, $userId]);
+        echo json_encode([
+            "status" => "success", 
+            "message" => "Cập nhật trạng thái người dùng thành công", 
+            "data" => ["id" => $userId, "status" => $dbStatus]
+        ]);
+        exit;
+    }
 }
 
 http_response_code(404);

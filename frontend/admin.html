@@ -673,7 +673,11 @@
 
                     loadAllData();
                 } else {
-                    alert(data.message || "Tên tài khoản hoặc mật khẩu không chính xác!");
+                    if (res.status === 403 || (data.message && (data.message.includes("bị khóa") || data.message.includes("khóa")))) {
+                        alert("Tài khoản của bạn đã bị khóa! Không thể đăng nhập.");
+                    } else {
+                        alert(data.message || "Tên tài khoản hoặc mật khẩu không chính xác!");
+                    }
                 }
             } catch (err) {
                 alert("Không thể kết nối đến User Service!");
@@ -1331,8 +1335,9 @@
             tbody.innerHTML = '';
             filtered.forEach(u => {
                 const role = (u.role || 'USER').toUpperCase();
-                const status = statusMap[u.id] || u.status || 'ACTIVE';
-                const isLocked = status === 'LOCKED';
+                const dbStatus = (u.status || '').toUpperCase();
+                const status = statusMap[u.id] || (dbStatus === 'BLOCKED' ? 'LOCKED' : (dbStatus || 'ACTIVE'));
+                const isLocked = status === 'LOCKED' || status === 'BLOCKED';
 
                 const roleLabel = role === 'ADMIN' ? 'QUẢN TRỊ VIÊN' : 'KHÁCH HÀNG';
                 const statusLabel = isLocked ? 'ĐÃ KHÓA' : 'HOẠT ĐỘNG';
@@ -1360,11 +1365,26 @@
             });
         }
 
-        function toggleUserLock(userId) {
+        async function toggleUserLock(userId) {
             const statusMap = JSON.parse(localStorage.getItem('adminUserStatus') || '{}');
-            const currentStatus = statusMap[userId] || 'ACTIVE';
-            statusMap[userId] = currentStatus === 'ACTIVE' ? 'LOCKED' : 'ACTIVE';
+            const userObj = allUsers.find(u => Number(u.id) === Number(userId));
+            const currentStatus = statusMap[userId] || (userObj && userObj.status === 'BLOCKED' ? 'LOCKED' : (userObj?.status || 'ACTIVE'));
+            const newStatus = (currentStatus === 'ACTIVE') ? 'LOCKED' : 'ACTIVE';
+            statusMap[userId] = newStatus;
             localStorage.setItem('adminUserStatus', JSON.stringify(statusMap));
+            if (userObj) {
+                userObj.status = newStatus === 'LOCKED' ? 'BLOCKED' : 'ACTIVE';
+            }
+
+            try {
+                const dbStatus = newStatus === 'LOCKED' ? 'BLOCKED' : 'ACTIVE';
+                await fetch(`/api/users/${userId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: dbStatus })
+                });
+            } catch (_) {}
+
             renderUsersTable();
         }
     </script>
