@@ -86,13 +86,8 @@
     <div class="admin-topbar py-1 border-bottom">
         <div class="container-fluid px-4 d-flex justify-content-between align-items-center">
             <div class="d-flex align-items-center gap-3">
-                <span>
-                    <i class="fa-solid fa-cloud text-warning me-1"></i>
-                    Microservices Architecture - Cổng Nginx Gateway
-                </span>
             </div>
             <div class="d-flex align-items-center gap-3">
-                <span class="badge bg-danger">VAI TRÒ: ADMIN</span>
                 <span id="admin-user-display" class="text-white fw-bold">
                     <i class="fa-solid fa-user-shield me-1"></i> QTV (admin123@gmail.com)
                 </span>
@@ -188,17 +183,17 @@
         <ul class="nav nav-tabs mb-4" id="adminTabs" role="tablist">
             <li class="nav-item">
                 <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-orders">
-                    <i class="fa-solid fa-receipt me-1"></i> Quản Lý Đơn Hàng (Order Service)
+                    <i class="fa-solid fa-receipt me-1"></i> Quản Lý Đơn Hàng
                 </button>
             </li>
             <li class="nav-item">
                 <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-products">
-                    <i class="fa-solid fa-cubes me-1"></i> Quản Lý Sản Phẩm & Kho (Product Service)
+                    <i class="fa-solid fa-cubes me-1"></i> Quản Lý Sản Phẩm & Kho
                 </button>
             </li>
             <li class="nav-item">
                 <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-users">
-                    <i class="fa-solid fa-users me-1"></i> Tài Khoản Hệ Thống (User Service)
+                    <i class="fa-solid fa-users me-1"></i> Tài Khoản Hệ Thống
                 </button>
             </li>
         </ul>
@@ -290,7 +285,7 @@
                 <div class="table-box">
                     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
                         <div class="d-flex align-items-center gap-2">
-                            <h5 class="fw-bold mb-0">Danh Sách Người Dùng Trong Database (user_db)</h5>
+                            <h5 class="fw-bold mb-0">Danh Sách Người Dùng Trong Database</h5>
                             <span class="badge bg-secondary" id="badge-total-users">1 tài khoản</span>
                         </div>
                         <input type="text" id="search-user-input" class="form-control form-control-sm" style="max-width: 240px;" placeholder="Tìm username hoặc email..." onkeyup="renderUsersTable()">
@@ -331,19 +326,23 @@
                     <form id="formAddProduct" onsubmit="handleCreateProduct(event)">
                         <div class="mb-3">
                             <label class="form-label small text-muted fw-semibold">Tên thiết bị / Phụ kiện *</label>
-                            <input type="text" id="prod-name" class="form-control" placeholder="Ví dụ: Giày Chạy Marathon Pro" required>
+                            <input type="text" id="prod-name" class="form-control" placeholder="Nhập tên sản phẩm" required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label small text-muted fw-semibold">Giá bán (VNĐ) *</label>
-                            <input type="number" id="prod-price" class="form-control" min="1000" placeholder="Ví dụ: 850000" required>
+                            <input type="number" id="prod-price" class="form-control" min="1000" placeholder="Nhập giá bán" required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label small text-muted fw-semibold">Số lượng nhập kho *</label>
-                            <input type="number" id="prod-stock" class="form-control" min="0" placeholder="Ví dụ: 50" required>
+                            <input type="number" id="prod-stock" class="form-control" min="0" placeholder="Nhập số lượng tồn kho" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label small text-muted fw-semibold">Mô tả ngắn</label>
-                            <input type="text" id="prod-desc" class="form-control" placeholder="Sản phẩm thể thao chính hãng">
+                            <label class="form-label small text-muted fw-semibold">Mô tả *</label>
+                            <input type="text" id="prod-desc" class="form-control" placeholder="Nhập mô tả sản phẩm" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small text-muted fw-semibold">Hình ảnh sản phẩm (Link URL hoặc tên file) *</label>
+                            <input type="text" id="prod-image" class="form-control" placeholder="images/shoe1.png hoặc https://link-anh..." required>
                         </div>
                         <button type="submit" class="btn btn-primary w-100 fw-bold">Xác Nhận Lưu Vào Kho</button>
                     </form>
@@ -669,13 +668,14 @@
             const name = document.getElementById('prod-name').value.trim();
             const price = Number(document.getElementById('prod-price').value);
             const stock = Number(document.getElementById('prod-stock').value);
-            const description = document.getElementById('prod-desc').value.trim() || 'Thiết bị thể thao chính hãng';
+            const description = document.getElementById('prod-desc').value.trim();
+            const image = document.getElementById('prod-image').value.trim();
 
             try {
                 const res = await fetch('/api/products', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, price, stock, description })
+                    body: JSON.stringify({ name, price, stock, description, image })
                 });
                 if (res.ok) {
                     alert("Thêm sản phẩm vào kho thành công!");

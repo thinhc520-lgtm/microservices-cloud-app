@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS products (
     description TEXT,
     price DECIMAL(10, 2) NOT NULL,
     stock INT DEFAULT 0,
+    image VARCHAR(255) DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 INSERT INTO products (name, description, price, stock) VALUES

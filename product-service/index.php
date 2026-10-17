@@ -68,5 +68,46 @@ if (($method === 'POST' || $method === 'PUT') && (strpos($path, 'reduce-stock') 
     exit;
 }
 
+// 4. Thêm sản phẩm mới (API cho trang Admin)
+if ($method === 'POST') {
+    $input = json_decode(file_get_contents('php://input'), true);
+    $name = trim($input['name'] ?? '');
+    $price = (float)($input['price'] ?? 0);
+    $stock = isset($input['stock']) ? (int)$input['stock'] : 0;
+    $description = trim($input['description'] ?? '');
+    $image = trim($input['image'] ?? '');
+
+    if (empty($name) || $price <= 0) {
+        http_response_code(400);
+        echo json_encode(["status" => "error", "message" => "Vui lòng nhập tên sản phẩm và giá hợp lệ", "data" => null]);
+        exit;
+    }
+
+    try {
+        $stmt = $pdo->prepare("INSERT INTO products (name, description, price, stock, image) VALUES (?, ?, ?, ?, ?)");
+        $stmt->execute([$name, $description, $price, $stock, $image]);
+        $newId = $pdo->lastInsertId();
+
+        http_response_code(201);
+        echo json_encode([
+            "status" => "success",
+            "message" => "Thêm sản phẩm thành công",
+            "product_id" => (int)$newId,
+            "data" => [
+                "id" => (int)$newId,
+                "name" => $name,
+                "description" => $description,
+                "price" => $price,
+                "stock" => $stock,
+                "image" => $image
+            ]
+        ]);
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode(["status" => "error", "message" => "Lỗi lưu sản phẩm: " . $e->getMessage(), "data" => null]);
+    }
+    exit;
+}
+
 http_response_code(404);
 echo json_encode(["status" => "error", "message" => "Endpoint không hợp lệ", "data" => null]);
