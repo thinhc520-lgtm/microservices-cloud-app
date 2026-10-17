@@ -56,7 +56,7 @@ if ($method === 'POST') {
     // 4. Tính tổng tiền và lưu vào order_db
     $totalPrice = $product['price'] * $quantity;
     try {
-        $status = $input['status'] ?? 'PENDING';
+        $status = !empty($input['status']) ? strtoupper(trim($input['status'])) : 'PENDING';
         $stmt = $pdo->prepare("INSERT INTO orders (user_id, product_id, quantity, total_price, status) VALUES (?, ?, ?, ?, ?)");
         $stmt->execute([$userId, $productId, $quantity, $totalPrice, $status]);
         $orderId = $pdo->lastInsertId();

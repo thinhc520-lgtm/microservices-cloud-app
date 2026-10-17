@@ -1556,12 +1556,63 @@
           `Mã OTP xác thực đặt hàng là: ${generatedOtpCode}`;
       }
 
-      // 5. GỬI ĐƠN HÀNG QUA ORDER SERVICE & LƯU THEO DÕI ĐƠN
+      // 5. ĐỊNH DẠNG VÀ TIỆN ÍCH HIỂN THỊ ĐƠN HÀNG
+      function formatVnDateTime(dateStr) {
+        if (!dateStr) return "Vừa tạo";
+        try {
+          const isoStr = dateStr.includes("T") ? dateStr : dateStr.replace(" ", "T");
+          const d = new Date(isoStr);
+          if (isNaN(d.getTime())) return dateStr;
+          const pad = (n) => String(n).padStart(2, "0");
+          return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+        } catch (e) {
+          return dateStr;
+        }
+      }
+
+      function getOrderStatusBadge(status) {
+        const s = (status || "PENDING").toUpperCase().trim();
+        if (s === "PENDING") {
+          return `<span class="badge bg-warning text-dark px-2 py-1"><i class="fa-solid fa-clock me-1"></i>Chờ xử lý</span>`;
+        }
+        if (s === "SHIPPING") {
+          return `<span class="badge bg-primary text-white px-2 py-1"><i class="fa-solid fa-truck-fast me-1"></i>Đang giao</span>`;
+        }
+        if (s === "COMPLETED") {
+          return `<span class="badge bg-success text-white px-2 py-1"><i class="fa-solid fa-check-circle me-1"></i>Hoàn tất</span>`;
+        }
+        if (s === "CANCELLED") {
+          return `<span class="badge bg-danger text-white px-2 py-1"><i class="fa-solid fa-ban me-1"></i>Đã hủy</span>`;
+        }
+        return `<span class="badge bg-secondary text-white px-2 py-1">${status}</span>`;
+      }
+
+      // 6. GỬI ĐƠN HÀNG QUA ORDER SERVICE VỚI USER ID THẬT VÀ TRẠNG THÁI PENDING
       async function handlePlaceOrder(e) {
         e.preventDefault();
 
-        // ĐIỀU KIỆN 3: Chặn nếu chưa đăng nhập khi submit đơn
-        if (!currentUser) {
+        // 1. Lấy thông tin user đăng nhập thực tế từ sessionStorage
+        let user = null;
+        try {
+          const stored =
+            sessionStorage.getItem("currentUser") ||
+            sessionStorage.getItem("user");
+          if (stored) {
+            user = JSON.parse(stored);
+            if (user && (user.data || user.user) && !user.id && !user.user_id) {
+              user = user.data || user.user;
+            }
+          }
+        } catch (_) {}
+        if (!user && currentUser) {
+          user = currentUser;
+        }
+
+        const rawUserId = user ? (user.id || user.user_id) : null;
+        const userId = Number(rawUserId);
+
+        // Chặn tuyệt đối nếu chưa đăng nhập hoặc không có user_id hợp lệ
+        if (!user || !rawUserId || isNaN(userId) || userId <= 0) {
           alert(
             "⚠️ Phiên đăng nhập đã hết hạn hoặc chưa đăng nhập. Vui lòng đăng nhập lại!",
           );
@@ -1587,31 +1638,16 @@
           return;
         }
 
-        const fullname = document.getElementById("order-fullname").value;
-        const phone = document.getElementById("order-phone").value;
-        const address = document.getElementById("order-address").value;
+        const fullname =
+          document.getElementById("order-fullname").value.trim() ||
+          user.username ||
+          "Khách hàng";
+        const phone = document.getElementById("order-phone").value.trim();
+        const address = document.getElementById("order-address").value.trim();
         const payment = document.getElementById("order-payment-method").value;
-        const totalPriceText =
-          document.getElementById("cart-total-price").innerText;
-
-        // Lấy đúng user_id của tài khoản đang đăng nhập từ sessionStorage
-        let userId = 1;
-        try {
-          const storedUser = JSON.parse(
-            sessionStorage.getItem("currentUser") ||
-            sessionStorage.getItem("user") ||
-            "{}"
-          );
-          const realUser = storedUser.data || storedUser.user || storedUser;
-          if (realUser && realUser.id) {
-            userId = Number(realUser.id);
-          } else if (currentUser && currentUser.id) {
-            userId = Number(currentUser.id);
-          }
-        } catch (_) {}
 
         try {
-          // Lấy đúng từng sản phẩm thực tế đang chọn trong giỏ hàng (cart)
+          // Lưu từng sản phẩm thực tế đang chọn trong giỏ hàng vào database qua order-service
           const createdOrders = [];
           for (const item of cart) {
             const res = await fetch("/api/orders", {
@@ -1621,19 +1657,20 @@
                 user_id: userId,
                 product_id: Number(item.id),
                 quantity: Number(item.quantity || 1),
-                status: "PENDING"
+                status: "PENDING",
               }),
             });
             const result = await res.json();
             if (res.ok && result.data) {
-              const oId = result.data.order_id || result.data.id || result.order_id;
+              const oId =
+                result.data.order_id || result.data.id || result.order_id;
               createdOrders.push({
                 order_id: oId,
                 product_id: item.id,
                 name: item.name,
                 price: Number(item.price),
                 quantity: Number(item.quantity || 1),
-                image: item.image || ''
+                image: item.image || "",
               });
             }
           }
@@ -1642,26 +1679,12 @@
             loyaltyPoints += 50;
             updateLoyaltyDisplay();
 
-            const orderIdsStr = createdOrders.map(o => `#${o.order_id}`).join(", ");
-            const mainOrderId = createdOrders[0].order_id;
-
-            // Lưu lịch sử đơn hàng ĐỘNG theo đúng sản phẩm và đơn hàng vừa tạo
-            saveOrderToHistory({
-              order_id: createdOrders.map(o => o.order_id).join(", "),
-              items: createdOrders,
-              username: (currentUser ? currentUser.username : "customer"),
-              date: new Date().toLocaleString("vi-VN"),
-              fullname: fullname,
-              phone: phone,
-              address: address,
-              payment: payment.toUpperCase(),
-              total: totalPriceText,
-              statusCode: "PENDING",
-              status: "Chờ xử lý",
-            });
+            const orderIdsStr = createdOrders
+              .map((o) => `#${o.order_id}`)
+              .join(", ");
 
             alert(
-              `🎉 ĐẶT HÀNG THÀNH CÔNG!\n- Mã đơn: ${orderIdsStr}\n- Người nhận: ${fullname} (${phone})\n- Địa chỉ: ${address}\n- Thanh toán: ${payment.toUpperCase()}\n- Trạng thái: Chờ xử lý\n- Đã tích lũy thêm: +50 Điểm Thân Thiết!\n\nHệ thống đang mở trang Theo dõi đơn hàng của bạn.`
+              `🎉 ĐẶT HÀNG THÀNH CÔNG!\n- Mã đơn: ${orderIdsStr}\n- Người nhận: ${fullname} (${phone})\n- Địa chỉ: ${address}\n- Thanh toán: ${payment.toUpperCase()}\n- Trạng thái: Chờ xử lý\n- Đã tích lũy thêm: +50 Điểm Thân Thiết!\n\nHệ thống đang mở trang Theo dõi đơn hàng của bạn.`,
             );
 
             // Xóa sạch giỏ hàng sau khi đặt thành công
@@ -1674,8 +1697,8 @@
             );
             if (modal) modal.hide();
 
-            // Tự động mở Modal Theo dõi đơn hàng
-            openOrderTrackingModal();
+            // Tự động mở Modal Theo dõi đơn hàng và tải dữ liệu thật từ backend
+            await openOrderTrackingModal();
           } else {
             alert(
               "Đặt hàng thất bại: Vui lòng kiểm tra lại kết nối đến Order Service!",
@@ -1688,18 +1711,28 @@
         }
       }
 
-      // 6. CHỨC NĂNG THEO DÕI ĐƠN HÀNG (ORDER TRACKING)
-      function saveOrderToHistory(orderObj) {
-        const userKey = currentUser
-          ? `orders_${currentUser.username}`
-          : "orders_guest";
-        const history = JSON.parse(localStorage.getItem(userKey) || "[]");
-        history.unshift(orderObj);
-        localStorage.setItem(userKey, JSON.stringify(history));
-      }
+      // 7. CHỨC NĂNG THEO DÕI ĐƠN HÀNG (ORDER TRACKING) ĐỒNG BỘ THẬT TỪ CSDL ORDER SERVICE
+      async function openOrderTrackingModal() {
+        let user = null;
+        try {
+          const stored =
+            sessionStorage.getItem("currentUser") ||
+            sessionStorage.getItem("user");
+          if (stored) {
+            user = JSON.parse(stored);
+            if (user && (user.data || user.user) && !user.id && !user.user_id) {
+              user = user.data || user.user;
+            }
+          }
+        } catch (_) {}
+        if (!user && currentUser) {
+          user = currentUser;
+        }
 
-      function openOrderTrackingModal() {
-        if (!currentUser) {
+        const rawUserId = user ? (user.id || user.user_id) : null;
+        const currentUserId = Number(rawUserId);
+
+        if (!user || !rawUserId || isNaN(currentUserId) || currentUserId <= 0) {
           alert(
             "⚠️ Vui lòng đăng nhập để xem và theo dõi danh sách đơn hàng của bạn!",
           );
@@ -1708,73 +1741,148 @@
           return;
         }
 
-        const userKey = `orders_${currentUser.username}`;
-        const history = JSON.parse(localStorage.getItem(userKey) || "[]");
         const container = document.getElementById("order-history-list");
+        container.innerHTML = `
+          <div class="text-center py-5">
+            <div class="spinner-border text-primary mb-2" role="status"></div>
+            <p class="text-muted small mb-0">Đang tải danh sách đơn hàng từ máy chủ...</p>
+          </div>
+        `;
 
-        if (history.length === 0) {
-          container.innerHTML = `
-                    <div class="text-center py-5">
-                        <i class="fa-solid fa-box-open fa-3x text-secondary mb-3"></i>
-                        <h6 class="text-muted">Bạn chưa có đơn hàng nào được tạo.</h6>
-                        <button class="btn btn-primary btn-sm mt-2 rounded-pill px-3" data-bs-dismiss="modal">Mua sắm ngay</button>
-                    </div>
-                `;
-        } else {
-          container.innerHTML = history
-            .map(
-              (item) => `
-                    <div class="card order-tracking-card shadow-sm mb-3 rounded-3 border-0">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="fw-bold text-primary fs-6">
-                                    <i class="fa-solid fa-receipt me-1"></i>Đơn Hàng: #${item.order_id}
-                                </span>
-                                <span class="badge bg-warning text-dark px-2 py-1">
-                                    <i class="fa-solid fa-clock me-1"></i>${item.status || "Chờ xử lý"}
-                                </span>
-                            </div>
-                            <div class="text-muted small mb-2"><i class="fa-regular fa-clock me-1"></i>Thời gian: ${item.date}</div>
-
-                            <!-- Danh sách sản phẩm thực tế trong đơn hàng -->
-                            <div class="p-2 bg-white rounded border mb-2">
-                                ${(item.items || []).map(prod => `
-                                    <div class="d-flex justify-content-between align-items-center py-1 border-bottom">
-                                        <div class="d-flex align-items-center gap-2">
-                                            ${prod.image ? `<img src="${prod.image}" style="width:36px;height:36px;object-fit:cover;border-radius:4px;border:1px solid #dee2e6;">` : `<div class="bg-light d-flex align-items-center justify-content-center text-secondary rounded" style="width:36px;height:36px;"><i class="fa-solid fa-box"></i></div>`}
-                                            <div>
-                                                <div class="fw-semibold small text-dark">${prod.name || 'Sản phẩm thể thao'}</div>
-                                                <small class="text-muted">SL: x${prod.quantity || 1} &bull; ${Number(prod.price).toLocaleString('vi-VN')} đ</small>
-                                            </div>
-                                        </div>
-                                        <div class="fw-bold text-danger small">${Number(prod.price * (prod.quantity || 1)).toLocaleString('vi-VN')} đ</div>
-                                    </div>
-                                `).join('')}
-                            </div>
-
-                            <div class="small"><b>Người nhận:</b> ${item.fullname} (${item.phone})</div>
-                            <div class="small text-truncate"><b>Địa chỉ:</b> ${item.address}</div>
-                            <div class="small"><b>Hình thức thanh toán:</b> <span class="badge bg-light text-dark border">${item.payment}</span></div>
-                            <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
-                                <span class="text-muted small">Tổng thanh toán:</span>
-                                <span class="fw-bold text-danger fs-5">${item.total}</span>
-                            </div>
-                            <div class="mt-2 text-end">
-                                <a href="tracking.html?order_id=${String(item.order_id).split(',')[0].replace(/[^0-9]/g, '')}&status=${encodeURIComponent(item.statusCode || 'PENDING')}" class="btn btn-sm btn-outline-info rounded-pill px-3">
-                                    <i class="fa-solid fa-truck-fast me-1"></i>Tra Cứu Vận Chuyển
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                `,
-            )
-            .join("");
+        const modalEl = document.getElementById("orderTrackingModal");
+        let trackingModal = bootstrap.Modal.getInstance(modalEl);
+        if (!trackingModal) {
+          trackingModal = new bootstrap.Modal(modalEl);
         }
-
-        const trackingModal = new bootstrap.Modal(
-          document.getElementById("orderTrackingModal"),
-        );
         trackingModal.show();
+
+        try {
+          // Nạp allProducts nếu chưa có để hiển thị tên và ảnh sản phẩm
+          if (!allProducts || allProducts.length === 0) {
+            try {
+              const pRes = await fetch("/api/products");
+              const pData = await pRes.json();
+              allProducts = Array.isArray(pData) ? pData : pData.data || [];
+            } catch (_) {}
+          }
+
+          const res = await fetch("/api/orders");
+          if (!res.ok) throw new Error("Order Service Error");
+          const json = await res.json();
+          const list = json.data || (Array.isArray(json) ? json : []);
+
+          // Lọc ra các đơn hàng của chính user đó (o.user_id == currentUser.id)
+          const userOrders = list.filter(
+            (o) => Number(o.user_id) === currentUserId,
+          );
+
+          if (userOrders.length === 0) {
+            container.innerHTML = `
+              <div class="text-center py-5">
+                <i class="fa-solid fa-box-open fa-3x text-secondary mb-3"></i>
+                <h6 class="text-muted fw-bold">Bạn chưa có đơn hàng nào!</h6>
+                <p class="text-muted small">Hãy dạo quanh cửa hàng và chọn cho mình những món đồ thể thao ưng ý nhé.</p>
+                <button class="btn btn-primary btn-sm mt-2 rounded-pill px-4" data-bs-dismiss="modal">Mua sắm ngay</button>
+              </div>
+            `;
+            return;
+          }
+
+          // Sắp xếp đơn hàng mới nhất (id lớn nhất) lên đầu
+          userOrders.sort((a, b) => Number(b.id) - Number(a.id));
+
+          function renderSingleOrderCard(item, isLatest = false) {
+            const prod = allProducts.find(
+              (p) => Number(p.id) === Number(item.product_id),
+            );
+            const prodName = prod
+              ? prod.name
+              : `Sản phẩm thể thao #${item.product_id}`;
+            const prodImg = prod
+              ? prod.mainImg ||
+                (prod.images && prod.images[0]) ||
+                (typeof prod.image === "string" && !prod.image.startsWith("[")
+                  ? prod.image
+                  : "")
+              : "";
+            const amount = Number(
+              item.total_price || (prod ? prod.price * item.quantity : 0),
+            );
+            const statusBadge = getOrderStatusBadge(item.status);
+            const dateDisplay = formatVnDateTime(item.created_at);
+
+            return `
+              <div class="card order-tracking-card shadow-sm mb-3 rounded-3 border-0">
+                <div class="card-body">
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="fw-bold text-primary fs-6">
+                      <i class="fa-solid fa-receipt me-1"></i>Đơn Hàng: #${item.id}
+                      ${isLatest ? '<span class="badge bg-danger ms-2" style="font-size: 0.72rem;"><i class="fa-solid fa-sparkles me-1"></i>Mới nhất</span>' : ""}
+                    </span>
+                    ${statusBadge}
+                  </div>
+                  <div class="text-muted small mb-2">
+                    <i class="fa-regular fa-clock me-1"></i>Thời gian: ${dateDisplay}
+                  </div>
+
+                  <!-- Thông tin sản phẩm thật từ CSDL -->
+                  <div class="p-2 bg-white rounded border mb-2">
+                    <div class="d-flex justify-content-between align-items-center py-1">
+                      <div class="d-flex align-items-center gap-2">
+                        ${
+                          prodImg
+                            ? `<img src="${prodImg}" style="width:42px;height:42px;object-fit:cover;border-radius:4px;border:1px solid #dee2e6;">`
+                            : `<div class="bg-light d-flex align-items-center justify-content-center text-secondary rounded border" style="width:42px;height:42px;"><i class="fa-solid fa-box"></i></div>`
+                        }
+                        <div>
+                          <div class="fw-semibold small text-dark">${prodName}</div>
+                          <small class="text-muted">Số lượng: x${item.quantity}</small>
+                        </div>
+                      </div>
+                      <div class="fw-bold text-danger small">${amount.toLocaleString("vi-VN")} đ</div>
+                    </div>
+                  </div>
+
+                  <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
+                    <span class="text-muted small">Tổng thanh toán:</span>
+                    <span class="fw-bold text-danger fs-5">${amount.toLocaleString("vi-VN")} đ</span>
+                  </div>
+                  <div class="mt-2 text-end">
+                    <a href="tracking.html?order_id=${item.id}&status=${encodeURIComponent(item.status || "PENDING")}" class="btn btn-sm btn-outline-info rounded-pill px-3">
+                      <i class="fa-solid fa-truck-fast me-1"></i>Tra Cứu Vận Chuyển
+                    </a>
+                  </div>
+                </div>
+              </div>
+            `;
+          }
+
+          let html = renderSingleOrderCard(userOrders[0], true);
+
+          if (userOrders.length > 1) {
+            html += `
+              <div class="mt-3">
+                <div class="small fw-bold text-muted mb-2">
+                  <i class="fa-solid fa-history me-1"></i>Các đơn hàng trước đó (${userOrders.length - 1} đơn):
+                </div>
+                ${userOrders
+                  .slice(1)
+                  .map((o) => renderSingleOrderCard(o, false))
+                  .join("")}
+              </div>
+            `;
+          }
+
+          container.innerHTML = html;
+        } catch (err) {
+          console.error("Lỗi tải đơn hàng:", err);
+          container.innerHTML = `
+            <div class="alert alert-danger py-3 text-center mb-0">
+              <i class="fa-solid fa-triangle-exclamation me-1"></i>
+              Không thể kết nối đến Dịch vụ Đơn Hàng (Order Service)! Vui lòng thử lại sau.
+            </div>
+          `;
+        }
       }
 
       // 7. XỬ LÝ USER SERVICE (ĐĂNG NHẬP / ĐĂNG KÝ)
