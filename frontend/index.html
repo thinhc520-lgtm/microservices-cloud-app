@@ -1658,6 +1658,7 @@
               address: address,
               payment: payment.toUpperCase(),
               total: totalPriceText,
+              statusCode: "PENDING",
               status: "Chờ xử lý",
             });
 
@@ -1761,7 +1762,7 @@
                                 <span class="fw-bold text-danger fs-5">${item.total}</span>
                             </div>
                             <div class="mt-2 text-end">
-                                <a href="tracking.html?order_id=${String(item.order_id).split(',')[0].replace(/[^0-9]/g, '')}&status=PENDING" class="btn btn-sm btn-outline-info rounded-pill px-3">
+                                <a href="tracking.html?order_id=${String(item.order_id).split(',')[0].replace(/[^0-9]/g, '')}&status=${encodeURIComponent(item.statusCode || 'PENDING')}" class="btn btn-sm btn-outline-info rounded-pill px-3">
                                     <i class="fa-solid fa-truck-fast me-1"></i>Tra Cứu Vận Chuyển
                                 </a>
                             </div>

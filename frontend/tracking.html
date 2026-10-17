@@ -69,6 +69,14 @@
         box-shadow: 0 0 0 2px var(--primary-color);
         animation: pulse 1.5s infinite;
       }
+      .timeline-dot.danger {
+        background-color: #dc3545;
+        box-shadow: 0 0 0 2px #dc3545;
+      }
+      .timeline-dot.warning {
+        background-color: #ffc107;
+        box-shadow: 0 0 0 2px #ffc107;
+      }
       @keyframes pulse {
         0% {
           transform: scale(0.95);
@@ -190,54 +198,8 @@
               <i class="fa-solid fa-route text-primary me-2"></i>Chi Tiết Hành
               Trình
             </h6>
-            <div class="timeline ps-2">
-              <div class="timeline-item">
-                <div class="timeline-dot current"></div>
-                <h6 class="fw-bold text-primary mb-1">
-                  Đang phát hàng đến địa chỉ người nhận
-                </h6>
-                <small class="text-muted d-block" id="time-step-4"
-                  >Hôm nay - Shipper đang trên tuyến đường giao hàng</small
-                >
-              </div>
-
-              <div class="timeline-item">
-                <div class="timeline-dot active"></div>
-                <h6 class="fw-bold text-dark mb-1">Đã đến bưu cục phát hàng</h6>
-                <small class="text-muted d-block" id="time-step-3"
-                  >Hôm nay - Kiện hàng đã nhập kho Cần Thơ SOC</small
-                >
-              </div>
-
-              <div class="timeline-item">
-                <div class="timeline-dot active"></div>
-                <h6 class="fw-bold text-dark mb-1">
-                  Đã rời kho phân loại tổng
-                </h6>
-                <small class="text-muted d-block" id="time-step-2"
-                  >Hôm qua - Kiện hàng đã xuất kho trung chuyển</small
-                >
-              </div>
-
-              <div class="timeline-item">
-                <div class="timeline-dot active"></div>
-                <h6 class="fw-bold text-dark mb-1">
-                  Đã đóng gói & Bàn giao vận chuyển
-                </h6>
-                <small class="text-muted d-block" id="time-step-1"
-                  >Đơn vị đóng gói hoàn tất kiện hàng</small
-                >
-              </div>
-
-              <div class="timeline-item">
-                <div class="timeline-dot active"></div>
-                <h6 class="fw-bold text-dark mb-1">
-                  Đơn hàng được khởi tạo thành công
-                </h6>
-                <small class="text-muted d-block" id="time-step-0"
-                  >Order Service đã xác nhận đơn</small
-                >
-              </div>
+            <div class="timeline ps-2" id="tracking-timeline-container">
+              <!-- Timeline tiến trình được render động theo trạng thái đơn hàng -->
             </div>
           </div>
         </div>
@@ -246,38 +208,257 @@
 
     <!-- Script xử lý logic tra cứu -->
     <script>
-      function handleSearch(e) {
-        e.preventDefault();
+      function normalizeStatus(raw) {
+        if (!raw) return "PENDING";
+        const s = String(raw).toUpperCase().trim();
+        if (s.includes("CANCEL") || s.includes("HỦY") || s.includes("TỪ CHỐI"))
+          return "CANCELLED";
+        if (
+          s.includes("COMPLETE") ||
+          s.includes("HOÀN TẤT") ||
+          s.includes("THÀNH CÔNG")
+        )
+          return "COMPLETED";
+        if (
+          s.includes("SHIP") ||
+          s.includes("GIAO") ||
+          s.includes("VẬN CHUYỂN")
+        )
+          return "SHIPPING";
+        if (s.includes("PENDING") || s.includes("CHỜ")) return "PENDING";
+        return s;
+      }
+
+      async function handleSearch(e) {
+        if (e && e.preventDefault) e.preventDefault();
         const orderId = document.getElementById("order-id-input").value.trim();
         if (!orderId) return;
 
         const resultBox = document.getElementById("tracking-result-box");
         resultBox.classList.remove("d-none");
 
-        // Tính toán thời gian dự kiến
+        // 1. Đọc trạng thái từ URL hoặc query từ API /api/orders
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlOrderId = urlParams.get("order_id");
+        const urlStatus = urlParams.get("status");
+
+        let currentStatus = "";
+        // Nếu URL có status và khớp đúng order_id đang tra cứu
+        if (urlStatus && (!urlOrderId || String(urlOrderId).trim() === String(orderId).trim())) {
+          currentStatus = normalizeStatus(urlStatus);
+        } else {
+          // Kiểm tra local override nếu Admin vừa cập nhật trạng thái
+          try {
+            const overrides = JSON.parse(
+              localStorage.getItem("adminOrderOverrides") || "{}"
+            );
+            if (overrides[orderId] || overrides[String(orderId)]) {
+              currentStatus = normalizeStatus(
+                overrides[orderId] || overrides[String(orderId)]
+              );
+            }
+          } catch (_) {}
+
+          // Query trực tiếp từ API backend
+          if (!currentStatus) {
+            try {
+              const res = await fetch(`/api/orders/${orderId}`);
+              if (res.ok) {
+                const json = await res.json();
+                if (json && json.data && json.data.status) {
+                  currentStatus = normalizeStatus(json.data.status);
+                }
+              } else {
+                const allRes = await fetch("/api/orders");
+                if (allRes.ok) {
+                  const allJson = await allRes.json();
+                  const list =
+                    allJson.data || (Array.isArray(allJson) ? allJson : []);
+                  const found = list.find((o) => String(o.id) === String(orderId));
+                  if (found && found.status) {
+                    currentStatus = normalizeStatus(found.status);
+                  }
+                }
+              }
+            } catch (err) {
+              console.warn("Lỗi tra cứu đơn hàng:", err);
+            }
+          }
+        }
+
+        if (!currentStatus) {
+          currentStatus = normalizeStatus(urlStatus || "PENDING");
+        }
+
+        // Cập nhật mã vận đơn
+        document.getElementById("ship-tracking-code").innerText =
+          `SP-ORDER-#${orderId}`;
+
+        const statusBadge = document.getElementById("ship-status-badge");
+        const etaEl = document.getElementById("ship-eta");
+        const shipperEl = document.getElementById("shipper-info");
+        const hubEl = document.getElementById("ship-current-hub");
+        const timelineEl = document.getElementById("tracking-timeline-container");
+
         const now = new Date();
+        const nowTime = now.toLocaleTimeString("vi-VN", {
+          hour: "2-digit",
+          minute: "2-digit"
+        });
         const eta = new Date(now.getTime() + 24 * 60 * 60 * 1000);
         const etaStr = `${eta.getHours()}:00 ngày ${eta.getDate()}/${eta.getMonth() + 1}/${eta.getFullYear()}`;
 
-        // Cập nhật thông tin giao diện
-        document.getElementById("ship-tracking-code").innerText =
-          `SP-ORDER-#${orderId}`;
-        document.getElementById("ship-eta").innerText = `Dự kiến: ${etaStr}`;
+        // 2. Cập nhật Badge và Timeline hành trình linh hoạt
+        if (currentStatus === "CANCELLED") {
+          // - CANCELLED (Đã hủy / Từ chối):
+          statusBadge.className = "badge bg-danger py-2 px-3 fs-6";
+          statusBadge.innerText = "ĐÃ HỦY GIAO HÀNG";
 
-        if (parseInt(orderId) % 2 === 0) {
-          document.getElementById("shipper-info").innerText =
-            "Trần Minh Quân - 0988.765.432";
-          document.getElementById("ship-current-hub").innerText =
-            "Trạm trung chuyển Ninh Kiều, Cần Thơ";
+          etaEl.className = "fw-bold text-danger";
+          etaEl.innerText = "Đã hủy đơn - Kiện hàng chuyển hoàn kho";
+
+          shipperEl.innerText = "Ngừng phát hàng - Hoàn trả";
+          hubEl.innerText = "Kho phân loại lưu trữ hàng hoàn (Cần Thơ SOC)";
+
+          timelineEl.innerHTML = `
+            <div class="timeline-item">
+              <div class="timeline-dot danger"></div>
+              <h6 class="fw-bold text-danger mb-1">
+                <i class="fa-solid fa-triangle-exclamation me-1"></i>Đơn hàng đã bị hủy / Khách từ chối nhận hàng
+              </h6>
+              <small class="text-muted d-block">Ghi nhận lúc: ${nowTime} hôm nay - Đơn hàng đã hủy, kiện hàng chuyển hoàn kho người gửi</small>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-dot active"></div>
+              <h6 class="fw-bold text-dark mb-1">Đã đóng gói & Bàn giao vận chuyển</h6>
+              <small class="text-muted d-block">Đơn vị đóng gói hoàn tất kiện hàng</small>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-dot active"></div>
+              <h6 class="fw-bold text-dark mb-1">Đơn hàng được khởi tạo thành công</h6>
+              <small class="text-muted d-block">Order Service đã xác nhận đơn #${orderId}</small>
+            </div>
+          `;
+        } else if (currentStatus === "COMPLETED") {
+          // - COMPLETED (Hoàn tất):
+          statusBadge.className = "badge bg-success py-2 px-3 fs-6";
+          statusBadge.innerText = "GIAO HÀNG THÀNH CÔNG";
+
+          etaEl.className = "fw-bold text-success";
+          etaEl.innerText = "Giao hàng thành công lúc " + nowTime;
+
+          if (parseInt(orderId) % 2 === 0) {
+            shipperEl.innerText = "Trần Minh Quân - 0988.765.432";
+            hubEl.innerText = "Đã phát thành công tại địa chỉ người nhận";
+          } else {
+            shipperEl.innerText = "Nguyễn Văn Hưng - 0912.345.678";
+            hubEl.innerText = "Đã phát thành công tại địa chỉ người nhận";
+          }
+
+          timelineEl.innerHTML = `
+            <div class="timeline-item">
+              <div class="timeline-dot active"></div>
+              <h6 class="fw-bold text-success mb-1">
+                <i class="fa-solid fa-circle-check me-1"></i>Đã giao hàng thành công đến người nhận (Ký nhận hoàn tất)
+              </h6>
+              <small class="text-muted d-block">Ghi nhận lúc: ${nowTime} hôm nay - Người nhận đã kiểm tra và hoàn tất thanh toán</small>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-dot active"></div>
+              <h6 class="fw-bold text-dark mb-1">Đang phát hàng đến địa chỉ người nhận</h6>
+              <small class="text-muted d-block">Hôm nay - Shipper đã hoàn tất tuyến giao phát</small>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-dot active"></div>
+              <h6 class="fw-bold text-dark mb-1">Đã đến bưu cục phát hàng</h6>
+              <small class="text-muted d-block">Hôm nay - Kiện hàng đã nhập kho Cần Thơ SOC</small>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-dot active"></div>
+              <h6 class="fw-bold text-dark mb-1">Đã rời kho phân loại tổng</h6>
+              <small class="text-muted d-block">Hôm qua - Kiện hàng đã xuất kho trung chuyển</small>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-dot active"></div>
+              <h6 class="fw-bold text-dark mb-1">Đã đóng gói & Bàn giao vận chuyển</h6>
+              <small class="text-muted d-block">Đơn vị đóng gói hoàn tất kiện hàng</small>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-dot active"></div>
+              <h6 class="fw-bold text-dark mb-1">Đơn hàng được khởi tạo thành công</h6>
+              <small class="text-muted d-block">Order Service đã xác nhận đơn #${orderId}</small>
+            </div>
+          `;
+        } else if (currentStatus === "PENDING") {
+          // - PENDING (Chờ xử lý):
+          statusBadge.className = "badge bg-warning text-dark py-2 px-3 fs-6";
+          statusBadge.innerText = "CHỜ LẤY HÀNG";
+
+          etaEl.className = "fw-bold text-warning-emphasis";
+          etaEl.innerText = "Đang chờ bưu tá đến lấy hàng";
+
+          shipperEl.innerText = "Đang sắp xếp bưu tá lấy hàng";
+          hubEl.innerText = "Kho chuẩn bị hàng Sports Shop";
+
+          timelineEl.innerHTML = `
+            <div class="timeline-item">
+              <div class="timeline-dot current"></div>
+              <h6 class="fw-bold text-warning-emphasis mb-1">
+                <i class="fa-solid fa-box-open me-1"></i>Shop đang đóng gói và chuẩn bị kiện hàng
+              </h6>
+              <small class="text-muted d-block">Ghi nhận lúc: ${nowTime} hôm nay - Đơn hàng đã tiếp nhận, nhân viên kho đang đóng gói</small>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-dot active"></div>
+              <h6 class="fw-bold text-dark mb-1">Đơn hàng được khởi tạo thành công</h6>
+              <small class="text-muted d-block">Order Service đã xác nhận đơn #${orderId}</small>
+            </div>
+          `;
         } else {
-          document.getElementById("shipper-info").innerText =
-            "Nguyễn Văn Hưng - 0912.345.678";
-          document.getElementById("ship-current-hub").innerText =
-            "Bưu cục Cần Thơ SOC (Đang chia tuyến)";
+          // - SHIPPING (Đang vận chuyển / mặc định):
+          statusBadge.className = "badge bg-primary py-2 px-3 fs-6";
+          statusBadge.innerText = "Đang Vận Chuyển";
+
+          etaEl.className = "fw-bold text-danger";
+          etaEl.innerText = `Dự kiến: ${etaStr}`;
+
+          if (parseInt(orderId) % 2 === 0) {
+            shipperEl.innerText = "Trần Minh Quân - 0988.765.432";
+            hubEl.innerText = "Trạm trung chuyển Ninh Kiều, Cần Thơ";
+          } else {
+            shipperEl.innerText = "Nguyễn Văn Hưng - 0912.345.678";
+            hubEl.innerText = "Bưu cục Cần Thơ SOC (Đang chia tuyến)";
+          }
+
+          timelineEl.innerHTML = `
+            <div class="timeline-item">
+              <div class="timeline-dot current"></div>
+              <h6 class="fw-bold text-primary mb-1">Đang phát hàng đến địa chỉ người nhận</h6>
+              <small class="text-muted d-block">Hôm nay - Shipper đang trên tuyến đường giao hàng</small>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-dot active"></div>
+              <h6 class="fw-bold text-dark mb-1">Đã đến bưu cục phát hàng</h6>
+              <small class="text-muted d-block">Hôm nay - Kiện hàng đã nhập kho Cần Thơ SOC</small>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-dot active"></div>
+              <h6 class="fw-bold text-dark mb-1">Đã rời kho phân loại tổng</h6>
+              <small class="text-muted d-block">Hôm qua - Kiện hàng đã xuất kho trung chuyển</small>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-dot active"></div>
+              <h6 class="fw-bold text-dark mb-1">Đã đóng gói & Bàn giao vận chuyển</h6>
+              <small class="text-muted d-block">Đơn vị đóng gói hoàn tất kiện hàng</small>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-dot active"></div>
+              <h6 class="fw-bold text-dark mb-1">Đơn hàng được khởi tạo thành công</h6>
+              <small class="text-muted d-block">Order Service đã xác nhận đơn #${orderId} lúc ${nowTime} hôm nay</small>
+            </div>
+          `;
         }
 
-        document.getElementById("time-step-0").innerText =
-          `Ghi nhận lúc: ${now.toLocaleTimeString()} hôm nay`;
         resultBox.scrollIntoView({ behavior: "smooth" });
       }
 

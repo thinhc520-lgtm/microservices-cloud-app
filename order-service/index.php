@@ -98,6 +98,23 @@ if ($method === 'POST') {
 
 // Lấy danh sách lịch sử đơn hàng
 if ($method === 'GET') {
+    $uriOrderId = null;
+    if (preg_match('#/([0-9]+)$#', parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), $matches)) {
+        $uriOrderId = (int)$matches[1];
+    }
+    if ($uriOrderId) {
+        $stmt = $pdo->prepare("SELECT * FROM orders WHERE id = ?");
+        $stmt->execute([$uriOrderId]);
+        $order = $stmt->fetch();
+        if ($order) {
+            echo json_encode(["status" => "success", "message" => "Chi tiết đơn hàng", "data" => $order]);
+        } else {
+            http_response_code(404);
+            echo json_encode(["status" => "error", "message" => "Không tìm thấy đơn hàng", "data" => null]);
+        }
+        exit;
+    }
+
     $stmt = $pdo->query("SELECT * FROM orders ORDER BY id DESC");
     echo json_encode(["status" => "success", "message" => "Danh sách đơn hàng", "data" => $stmt->fetchAll()]);
     exit;
