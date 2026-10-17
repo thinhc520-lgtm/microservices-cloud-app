@@ -1828,6 +1828,10 @@
             }
 
             localStorage.setItem("currentUser", JSON.stringify(user));
+            localStorage.setItem("user", JSON.stringify(user));
+            if (data.token) {
+              localStorage.setItem("token", data.token);
+            }
             currentUser = user;
 
             if (user.role === "ADMIN" || uname === "admin") {
@@ -1998,15 +2002,15 @@
       }
 
       function logout() {
-        currentUser = null;
-        loyaltyPoints = 0;
-        localStorage.removeItem("currentUser");
-        updateUserDisplay();
-        alert("Đã đăng xuất tài khoản.");
+        localStorage.removeItem('user');
+        localStorage.removeItem('currentUser');
+        localStorage.removeItem('token');
+        localStorage.removeItem('cart');
+        window.location.reload();
       }
 
       document.addEventListener("DOMContentLoaded", () => {
-        const stored = localStorage.getItem("currentUser");
+        const stored = localStorage.getItem("currentUser") || localStorage.getItem("user");
         if (stored) {
           try {
             currentUser = JSON.parse(stored);

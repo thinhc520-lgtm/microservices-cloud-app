@@ -501,7 +501,7 @@
 
         // Kiểm tra quyền ADMIN khi vào trang
         document.addEventListener('DOMContentLoaded', () => {
-            const storedUser = localStorage.getItem('currentUser');
+            const storedUser = localStorage.getItem('currentUser') || localStorage.getItem('user');
             if (!storedUser) {
                 alert("Vui lòng đăng nhập với tư cách Quản trị viên!");
                 window.location.href = 'index.html';
@@ -543,9 +543,11 @@
         });
 
         function handleAdminLogout() {
+            localStorage.removeItem('user');
             localStorage.removeItem('currentUser');
-            alert("Đã đăng xuất tài khoản Quản trị viên!");
-            window.location.href = 'index.html';
+            localStorage.removeItem('token');
+            localStorage.removeItem('cart');
+            window.location.reload();
         }
 
         async function loadAllData() {
