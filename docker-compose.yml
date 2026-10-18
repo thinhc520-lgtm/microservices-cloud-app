@@ -67,7 +67,7 @@ services:
   product-service:
     build:
       context: ./product-service
-    # container_name: app_product_service
+    container_name: app_product_service
     environment:
       DB_HOST: product-db
       DB_NAME: product_db
