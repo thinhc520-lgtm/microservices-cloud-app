@@ -99,4 +99,46 @@ Chờ 10 giây cho MySQL khởi động, quay lại `http://13.220.188.139/admin
 
 ## 6. Kịch bản 5: Khả năng tự phục hồi (Self-Healing & Auto-Restart)
 
-Chứng minh chính sách `restart: always` giúp hệ thống tự động hồi sinh các dịch
+Chứng minh chính sách `restart: always` giúp hệ thống tự động hồi sinh các dịch vụ bị crash đột ngột mà không cần quản trị viên can thiệp.
+
+- **Bước 1: Ép tắt đột ngột dịch vụ Order (Chạy trên Terminal EC2)**
+```bash
+sudo docker kill app_order_service
+```
+
+- **Bước 2: Kiểm tra Docker tự khởi động lại tiến trình (Chạy trên Terminal EC2)**
+```bash
+sudo docker ps -f name=app_order_service
+```
+*Cách xác minh:* Cột `STATUS` hiển thị `Up Less than a second` hoặc `Up 2 seconds` (container đã được tự động bật lại).
+
+---
+
+## 7. Kịch bản 6: Giám sát tài nguyên thời gian thực (Resource Monitoring)
+
+Theo dõi mức tiêu thụ tài nguyên phần cứng (CPU, RAM, Lưu lượng mạng) của từng microservice khi có tải truy cập.
+
+- **Bước 1: Mở bảng giám sát tài nguyên động (Chạy trên Terminal EC2)**
+```bash
+sudo docker stats
+```
+
+- **Bước 2: Bắn tải để quan sát biến động CPU/RAM (Chạy trên PowerShell máy tính)**
+```powershell
+1..200 | ForEach-Object { Invoke-RestMethod -Uri "[http://13.220.188.139/index.html](http://13.220.188.139/index.html)" -Method Get | Out-Null }
+```
+*Cách xác minh:* Cột `% CPU` và `NET I/O` của `nginx_gateway` và `web_frontend` trên bảng stats sẽ tăng tương ứng theo từng đợt gửi request.
+
+- **Bước 3:** Nhấn `Ctrl + C` trên Terminal EC2 để thoát bảng giám sát.
+
+---
+
+## 8. Lệnh dọn dẹp và khôi phục trạng thái chuẩn
+
+Sau khi thực hiện xong các kịch bản thử nghiệm, chạy lệnh sau trên Terminal EC2 để đưa toàn bộ hệ thống về cụm 8 container nguyên bản:
+```bash
+cd ~/microservices-cloud-app
+sudo docker compose up -d --scale product-service=1 --remove-orphans
+sudo docker restart nginx_gateway web_frontend
+sudo docker compose ps
+```
