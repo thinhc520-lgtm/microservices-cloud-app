@@ -1,18 +1,18 @@
 # Microservices Cloud Application - Sports Shop
 
-Ứng dụng thương mại điện tử Cửa hàng Thể thao xây dựng theo kiến trúc Microservices[cite: 20, 21], phân rã theo nguyên tắc Database-per-Service[cite: 20, 22], đóng gói bằng Docker và điều phối tập trung qua Docker Compose trên môi trường Cloud[cite: 21, 22].
+Ứng dụng thương mại điện tử Cửa hàng Thể thao xây dựng theo kiến trúc Microservices, phân rã theo nguyên tắc Database-per-Service, đóng gói bằng Docker và điều phối tập trung qua Docker Compose trên môi trường Cloud.
 
 ---
 
 ## 1. Kiến trúc hệ thống
 
-* **Nginx API Gateway (`nginx_gateway`)**: Cổng tiếp nhận duy nhất tại port `80`, đóng vai trò Reverse Proxy và cân bằng tải Round-Robin[cite: 20, 22].
-* **Web Frontend (`web_frontend`)**: Giao diện người dùng Web tĩnh (HTML/CSS/JS)[cite: 21, 22].
-* **User Service (`app_user_service`)**: RESTful API quản lý tài khoản, mã hóa Bcrypt (`db_user_mysql`)[cite: 20, 21, 22].
-* **Product Service (`app_product_service`)**: RESTful API quản lý danh mục và tồn kho (`db_product_mysql`)[cite: 20, 21, 22].
-* **Order Service (`app_order_service`)**: RESTful API xử lý giao dịch đơn hàng liên dịch vụ (`db_order_mysql`)[cite: 20, 21, 22].
-* **Docker Network (`app-network`)**: Mạng ảo Bridge cách ly nội bộ, tự động phân giải tên miền (Embedded DNS)[cite: 20, 22].
-* **Docker Volumes (`db_*_data`)**: Lưu trữ dữ liệu MySQL bền vững trên ổ đĩa máy chủ[cite: 20, 22].
+* **Nginx API Gateway (`nginx_gateway`)**: Cổng tiếp nhận duy nhất tại port `80`, đóng vai trò Reverse Proxy và cân bằng tải Round-Robin.
+* **Web Frontend (`web_frontend`)**: Giao diện người dùng Web tĩnh (HTML/CSS/JS).
+* **User Service (`app_user_service`)**: RESTful API quản lý tài khoản, mã hóa Bcrypt (`db_user_mysql`).
+* **Product Service (`app_product_service`)**: RESTful API quản lý danh mục và tồn kho (`db_product_mysql`).
+* **Order Service (`app_order_service`)**: RESTful API xử lý giao dịch đơn hàng liên dịch vụ (`db_order_mysql`).
+* **Docker Network (`app-network`)**: Mạng ảo Bridge cách ly nội bộ, tự động phân giải tên miền (Embedded DNS).
+* **Docker Volumes (`db_*_data`)**: Lưu trữ dữ liệu MySQL bền vững trên ổ đĩa máy chủ.
 
 ---
 
@@ -131,7 +131,7 @@ docker compose ps
 
 ## 4. Lệnh khôi phục tổng thể toàn hệ thống
 
-Lệnh dọn dẹp chung sau khi kiểm thử xong, đưa toàn bộ hệ sinh thái về cấu hình 8 container chuẩn ban đầu[cite: 22]:
+Lệnh dọn dẹp chung sau khi kiểm thử xong, đưa toàn bộ hệ sinh thái về cấu hình 8 container chuẩn ban đầu:
 ```bash
 docker compose up -d --scale product-service=1 --remove-orphans
 docker restart nginx_gateway
