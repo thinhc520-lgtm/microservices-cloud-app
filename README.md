@@ -1,45 +1,139 @@
-Microservices Cloud Application - Sports ShopỨng dụng thương mại điện tử Cửa hàng Thể thao xây dựng theo kiến trúc Microservices, phân rã theo nguyên tắc Database-per-Service, đóng gói bằng Docker và điều phối tập trung qua Docker Compose trên máy chủ Cloud.   1. Kiến trúc hệ thốngNginx API Gateway (nginx_gateway): Điểm tiếp nhận duy nhất tại cổng 80, đóng vai trò Reverse Proxy định tuyến API và cân bằng tải Round-Robin.   Web Frontend (web_frontend): Giao diện người dùng web tĩnh (HTML/CSS/JS).   User Service (app_user_service): RESTful API quản lý tài khoản, mã hóa mật khẩu Bcrypt. Đi kèm cơ sở dữ liệu db_user_mysql (user_db).   Product Service (app_product_service): RESTful API quản lý danh mục và tồn kho sản phẩm thể thao. Đi kèm cơ sở dữ liệu db_product_mysql (product_db).   Order Service (app_order_service): RESTful API xử lý giao dịch đặt hàng liên dịch vụ (xác thực User $\rightarrow$ kiểm tra Product $\rightarrow$ trừ tồn kho). Đi kèm cơ sở dữ liệu db_order_mysql (order_db).   Docker Network (app-network): Mạng ảo Bridge cách ly nội bộ, cho phép các container giao tiếp qua Service Name.   Docker Volumes (db_*_data): Lưu trữ bền vững dữ liệu MySQL trên ổ cứng máy chủ.   2. Hướng dẫn cài đặt và vận hànhKhởi động toàn bộ cụm 8 ContainerBashdocker compose up -d --build
-   Kiểm tra trạng thái hệ thốngBashdocker compose ps
-   Theo dõi nhật ký (Logs)Bash# Xem log toàn bộ hệ thống
-docker compose logs -f
+# Microservices Cloud Application - Sports Shop
 
-# Xem log riêng của Nginx Gateway
+Ứng dụng thương mại điện tử Cửa hàng Thể thao xây dựng theo kiến trúc Microservices[cite: 20, 21], phân rã theo nguyên tắc Database-per-Service[cite: 20, 22], đóng gói bằng Docker và điều phối tập trung qua Docker Compose trên môi trường Cloud[cite: 21, 22].
+
+---
+
+## 1. Kiến trúc hệ thống
+
+* **Nginx API Gateway (`nginx_gateway`)**: Cổng tiếp nhận duy nhất tại port `80`, đóng vai trò Reverse Proxy và cân bằng tải Round-Robin[cite: 20, 22].
+* **Web Frontend (`web_frontend`)**: Giao diện người dùng Web tĩnh (HTML/CSS/JS)[cite: 21, 22].
+* **User Service (`app_user_service`)**: RESTful API quản lý tài khoản, mã hóa Bcrypt (`db_user_mysql`)[cite: 20, 21, 22].
+* **Product Service (`app_product_service`)**: RESTful API quản lý danh mục và tồn kho (`db_product_mysql`)[cite: 20, 21, 22].
+* **Order Service (`app_order_service`)**: RESTful API xử lý giao dịch đơn hàng liên dịch vụ (`db_order_mysql`)[cite: 20, 21, 22].
+* **Docker Network (`app-network`)**: Mạng ảo Bridge cách ly nội bộ, tự động phân giải tên miền (Embedded DNS)[cite: 20, 22].
+* **Docker Volumes (`db_*_data`)**: Lưu trữ dữ liệu MySQL bền vững trên ổ đĩa máy chủ[cite: 20, 22].
+
+---
+
+## 2. Hướng dẫn cài đặt và vận hành
+
+### Khởi động toàn bộ cụm 8 Container
+```bash
+docker compose up -d --build
+```
+
+### Kiểm tra trạng thái các Container
+```bash
+docker compose ps
+```
+
+### Theo dõi nhật ký hệ thống (Logs)
+```bash
+# Xem log toàn bộ hệ thống
+docker compose logs -f
+```
+
+```bash
+# Xem riêng log của Nginx Gateway
 docker logs -f nginx_gateway
-   3. Các kịch bản kiểm thử thực nghiệm (Terminal Commands)Kịch bản 1: Kiểm thử mở rộng quy mô (Horizontal Scaling)Nhân bản product-service từ 1 lên 3 container để nâng cao năng lực chịu tải:   Bash# Thực hiện scale lên 3 container:
+```
+
+---
+
+## 3. Các kịch bản kiểm thử thực nghiệm
+
+### Kịch bản 1: Mở rộng quy mô (Horizontal Scaling)
+
+* **Bước 1: Tăng số lượng instance của Product Service lên 3 container**
+```bash
 docker compose up -d --scale product-service=3
 docker compose ps
+```
 
-# LỆNH KHÔI PHỤC: Thu gọn về 1 container ban đầu
+* **Bước 2 (Khôi phục): Thu gọn về 1 container ban đầu**
+```bash
 docker compose up -d --scale product-service=1 --remove-orphans
 docker compose ps
-Kịch bản 2: Kiểm thử Cân bằng tải (Load Balancing - Round-Robin)Gửi liên tiếp lưu lượng tải vào API Gateway để kiểm tra Nginx phân phối luân phiên ~33.3% tải cho mỗi container:   Trên Windows PowerShell:PowerShell1..300 | ForEach-Object { 
-    Invoke-RestMethod -Uri "http://localhost/api/products" -Method Get | Out-Null 
-}
-Trên Linux / Cloud VPS (Dùng Apache Benchmark):Bashab -n 1000 -c 10 http://localhost/api/products
-   Kiểm tra luồng chia tải trên log Nginx:Bashdocker logs -f nginx_gateway
-   LỆNH KHÔI PHỤC: Khởi động lại Nginx và đưa container về chuẩnBashdocker compose up -d --scale product-service=1 --remove-orphans
+```
+
+---
+
+### Kịch bản 2: Cân bằng tải (Load Balancing - Round-Robin)
+
+* **Bước 1: Bắn 300 requests liên tục để thử tải**
+
+  *Chạy trên Windows PowerShell:*
+```powershell
+1..300 | ForEach-Object { Invoke-RestMethod -Uri "http://localhost/api/products" -Method Get | Out-Null }
+```
+
+  *Hoặc chạy trên Linux / Cloud VPS (Apache Benchmark):*
+```bash
+ab -n 1000 -c 10 http://localhost/api/products
+```
+
+* **Bước 2: Kiểm tra tỷ lệ chia đều tải trên log Nginx**
+```bash
+docker logs -f nginx_gateway
+```
+
+* **Bước 3 (Khôi phục): Đưa container về chuẩn và làm mới Gateway**
+```bash
+docker compose up -d --scale product-service=1 --remove-orphans
 docker restart nginx_gateway
 docker compose ps
-Kịch bản 3: Kiểm thử Cô lập sự cố (Fault Isolation)Mô phỏng sự cố dừng đột ngột product-service để kiểm chứng hệ thống không bị sụp đổ dây chuyền (User Service và Web vẫn chạy bình thường):   Bash# 1. Dừng container sản phẩm:
+```
+
+---
+
+### Kịch bản 3: Cô lập sự cố (Fault Isolation)
+
+* **Bước 1: Giả lập sự cố làm sập container Product Service**
+```bash
 docker stop app_product_service
+```
 
-# 2. Kiểm tra: User Service vẫn hoạt động bình thường
+* **Bước 2: Kiểm tra User Service và Web vẫn hoạt động bình thường**
+```bash
 curl -I http://localhost/api/users/1
+```
 
-# 3. LỆNH KHÔI PHỤC: Kích hoạt lại container sản phẩm
+* **Bước 3 (Khôi phục): Kích hoạt lại container Product Service**
+```bash
 docker compose up -d product-service
 docker compose ps
-   Kịch bản 4: Kiểm thử Lưu trữ bền vững (Docker Volume)Xóa bỏ cưỡng bức các container CSDL để xác minh dữ liệu không bị mất sau khi khởi tạo lại:   Bash# 1. Dừng và xóa 2 container Database:
+```
+
+---
+
+### Kịch bản 4: Lưu trữ bền vững (Docker Volume Persistence)
+
+* **Bước 1: Dừng và xóa cưỡng bức 2 container cơ sở dữ liệu**
+```bash
 docker compose stop user-db order-db
 docker compose rm -f user-db order-db
+```
 
-# 2. LỆNH KHÔI PHỤC: Tạo lại container CSDL từ Docker Volume đã lưu
+* **Bước 2 (Khôi phục): Dựng lại container CSDL mới từ Docker Volume**
+```bash
 docker compose up -d user-db order-db
+```
 
-# 3. Kiểm tra dữ liệu cũ vẫn bảo toàn nguyên vẹn:
+* **Bước 3: Kiểm tra dữ liệu cũ vẫn còn nguyên vẹn 100%**
+```bash
 curl http://localhost/api/users/1
 curl http://localhost/api/orders/1
 docker compose ps
-4. Lệnh khôi phục tổng thể toàn hệ thốngLệnh dọn dẹp chung sau khi hoàn thành toàn bộ quá trình kiểm thử để hệ thống sẵn sàng triển khai:   Bashdocker compose up -d --scale product-service=1 --remove-orphans
+```
+
+---
+
+## 4. Lệnh khôi phục tổng thể toàn hệ thống
+
+Lệnh dọn dẹp chung sau khi kiểm thử xong, đưa toàn bộ hệ sinh thái về cấu hình 8 container chuẩn ban đầu[cite: 22]:
+```bash
+docker compose up -d --scale product-service=1 --remove-orphans
 docker restart nginx_gateway
 docker compose ps
+```
