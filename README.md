@@ -1,124 +1,102 @@
-Microservices Cloud Application - Sports Shop
-Ứng dụng thương mại điện tử Cửa hàng Thể thao xây dựng theo kiến trúc Microservices, phân rã theo nguyên tắc Database-per-Service, đóng gói bằng Docker và điều phối tập trung qua Docker Compose trên môi trường Cloud.
+# Kịch bản Kiểm thử Hệ sinh thái Microservices trên Cloud (AWS EC2)
 
-1. Kiến trúc hệ thống
-Nginx API Gateway (nginx_gateway): Cổng tiếp nhận duy nhất tại port 80, đóng vai trò Reverse Proxy và cân bằng tải Round-Robin.
+Tài liệu hướng dẫn thực nghiệm và trình diễn các đặc tính kỹ thuật cốt lõi của hệ thống Microservices (Scaling, Load Balancing, Fault Isolation, Volume Persistence, Self-Healing, Monitoring) trên môi trường Cloud VPS.
 
-Web Frontend (web_frontend): Giao diện người dùng Web tĩnh (HTML/CSS/JS).
+---
 
-User Service (app_user_service): RESTful API quản lý tài khoản, mã hóa Bcrypt (db_user_mysql).
+## 1. Thông tin môi trường triển khai
 
-Product Service (app_product_service): RESTful API quản lý danh mục và tồn kho (db_product_mysql).
+- **Public IP máy chủ EC2**: `13.220.188.139`
+- **Cổng tiếp nhận (Nginx Gateway)**: `80`
+- **Địa chỉ Web Khách hàng**: `http://13.220.188.139/index.html`
+- **Địa chỉ Quản trị Đơn hàng**: `http://13.220.188.139/admin.html`
+- **Đường dẫn thư mục dự án trên EC2**: `~/microservices-cloud-app`
 
-Order Service (app_order_service): RESTful API xử lý giao dịch đơn hàng liên dịch vụ (db_order_mysql).
+---
 
-Docker Network (app-network): Mạng ảo Bridge cách ly nội bộ, tự động phân giải tên miền (Embedded DNS).
+## 2. Kịch bản 1: Mở rộng quy mô linh hoạt (Horizontal Scaling)
 
-Docker Volumes (db_*_data): Lưu trữ dữ liệu MySQL bền vững trên ổ đĩa máy chủ.
+Chứng minh khả năng tăng giảm số lượng container Backend động mà không làm gián đoạn hệ thống.
 
-2. Hướng dẫn cài đặt và vận hành
-Khởi động toàn bộ cụm 8 Container
-Bash
-docker compose up -d --build
-Kiểm tra trạng thái các Container
-Bash
-docker compose ps
-Theo dõi nhật ký hệ thống (Logs)
-Bash
-# Xem log toàn bộ hệ thống
-docker compose logs -f
+- **Bước 1: Tăng số lượng instance của Product Service lên 3 container (Chạy trên Terminal EC2)**
+```bash
+cd ~/microservices-cloud-app
+sudo docker compose up -d --scale product-service=3
+sudo docker compose ps
+```
+*Cách xác minh:* Terminal xuất hiện 3 container `product-service-1`, `product-service-2`, `product-service-3` đều ở trạng thái `Up`.
 
-# Xem riêng log của Nginx Gateway
-docker logs -f nginx_gateway
-3. Các kịch bản kiểm thử thực nghiệm
-Kịch bản 1: Mở rộng quy mô (Horizontal Scaling)
-Bước 1: Tăng số lượng instance của Product Service lên 3 container
+- **Bước 2 (Khôi phục): Thu gọn về lại 1 container chuẩn ban đầu (Chạy trên Terminal EC2)**
+```bash
+sudo docker compose up -d --scale product-service=1 --remove-orphans
+sudo docker compose ps
+```
 
-Bash
-docker compose up -d --scale product-service=3
-docker compose ps
-Bước 2 (Khôi phục): Thu gọn về 1 container ban đầu
+---
 
-Bash
-docker compose up -d --scale product-service=1 --remove-orphans
-docker compose ps
-Kịch bản 2: Cân bằng tải (Load Balancing - Round-Robin)
-Bước 1: Bắn 300 requests liên tục để thử tảiChạy trên Windows PowerShell:
+## 3. Kịch bản 2: Cân bằng tải qua Gateway (Load Balancing - Round-Robin)
 
-PowerShell
-1..300 | ForEach-Object { Invoke-RestMethod -Uri "http://localhost/api/products" -Method Get | Out-Null }
-Hoặc chạy trên Linux / Cloud VPS (Apache Benchmark):
+Chứng minh Nginx Gateway tiếp nhận truy cập từ Internet và phân phối tải luân phiên cho các container Backend chạy ngầm.
 
-Bash
-ab -n 1000 -c 10 http://localhost/api/products
-Bước 2: Kiểm tra tỷ lệ chia đều tải trên log Nginx
+- **Bước 1: Bật chế độ theo dõi log Nginx theo thời gian thực (Chạy trên Terminal EC2)**
+```bash
+sudo docker logs -f nginx_gateway
+```
 
-Bash
-docker logs -f nginx_gateway
-Bước 3 (Khôi phục): Đưa container về chuẩn và làm mới Gateway
+- **Bước 2: Gửi 100 requests liên tục vào Public IP Cloud (Chạy trên PowerShell máy tính)**
+```powershell
+1..100 | ForEach-Object { Invoke-RestMethod -Uri "[http://13.220.188.139/api/products](http://13.220.188.139/api/products)" -Method Get | Out-Null }
+```
+*Cách xác minh:* Quan sát màn hình Terminal EC2, log của `nginx_gateway` sẽ nhảy liên tục các bản ghi `GET /api/products HTTP/1.1 200`.
 
-Bash
-docker compose up -d --scale product-service=1 --remove-orphans
-docker restart nginx_gateway
-docker compose ps
-Kịch bản 3: Cô lập sự cố (Fault Isolation)
-Bước 1: Giả lập sự cố làm sập container Product Service
+- **Bước 3:** Nhấn `Ctrl + C` trên Terminal EC2 để dừng theo dõi log.
 
-Bash
-docker stop app_product_service
-Bước 2: Kiểm tra User Service và Web vẫn hoạt động bình thường
+---
 
-Bash
-curl -I http://localhost/api/users/1
-Bước 3 (Khôi phục): Kích hoạt lại container Product Service
+## 4. Kịch bản 3: Cô lập sự cố (Fault Isolation)
 
-Bash
-docker compose up -d product-service
-docker compose ps
-Kịch bản 4: Lưu trữ bền vững (Docker Volume Persistence)
-Bước 1: Dừng và xóa cưỡng bức 2 container cơ sở dữ liệu
+Chứng minh kiến trúc Microservices phân tán giúp hệ thống không bị "chết chùm" khi một dịch vụ thành phần gặp sự cố.
 
-Bash
-docker compose stop user-db order-db
-docker compose rm -f user-db order-db
-Bước 2 (Khôi phục): Dựng lại container CSDL mới từ Docker Volume
+- **Bước 1: Ép dừng hoạt động dịch vụ Product Service (Chạy trên Terminal EC2)**
+```bash
+sudo docker stop microservices-cloud-app-product-service-1
+```
 
-Bash
-docker compose up -d user-db order-db
-Bước 3: Kiểm tra dữ liệu cũ vẫn còn nguyên vẹn 100%
+- **Bước 2: Kiểm tra tính sẵn sàng của các dịch vụ còn lại (Chạy trên Trình duyệt máy tính)**
+1. Mở trang quản trị: `http://13.220.188.139/admin.html` $\rightarrow$ Nhấn `Ctrl + F5` (Dịch vụ Order vẫn tải đủ danh sách đơn hàng).
+2. Kiểm tra trực tiếp API User: `http://13.220.188.139/api/users/1` $\rightarrow$ Trình duyệt vẫn trả về JSON dữ liệu người dùng bình thường.
 
-Bash
-curl http://localhost/api/users/1
-curl http://localhost/api/orders/1
-docker compose ps
-Kịch bản 5: Khả năng tự phục hồi (Self-Healing & Auto-Restart)
-Bước 1: Ép tắt cưỡng bức tiến trình của một dịch vụ (giả lập crash đột ngột)
+- **Bước 3 (Khôi phục): Kích hoạt lại Product Service (Chạy trên Terminal EC2)**
+```bash
+sudo docker compose up -d product-service
+sudo docker compose ps
+```
 
-Bash
-docker kill app_order_service
-Bước 2: Theo dõi Docker tự động hồi sinh container trong 1-2 giây
+---
 
-Bash
-docker ps -f name=app_order_service
-Bước 3: Kiểm tra API của dịch vụ vẫn thông suốt
+## 5. Kịch bản 4: Lưu trữ bền vững dữ liệu (Docker Volume Persistence)
 
-Bash
-curl -I http://localhost/api/orders/1
-Kịch bản 6: Giám sát tài nguyên thời gian thực (Resource Monitoring)
-Bước 1: Bật màn hình giám sát động các container
+Chứng minh vòng đời của dữ liệu độc lập với vòng đời của Container: xóa bỏ hoàn toàn container cơ sở dữ liệu thì dữ liệu trên Cloud vẫn nguyên vẹn 100%.
 
-Bash
-docker stats --format "table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.NetIO}}"
-Bước 2: Bắn tải thử nghiệm để quan sát biến động CPU/RAM trên bảng statsMở một tab terminal khác và chạy:
+- **Bước 1: Xóa cưỡng bức container cơ sở dữ liệu đơn hàng (Chạy trên Terminal EC2)**
+```bash
+sudo docker rm -f db_order_mysql
+```
 
-Bash
-for i in {1..200}; do curl -s http://localhost/api/products > /dev/null; done
-Bước 3: Nhấn Ctrl + C để thoát màn hình giám sát.
+- **Bước 2: Kiểm tra trạng thái lỗi kết nối (Chạy trên Trình duyệt máy tính)**
+Truy cập `http://13.220.188.139/admin.html` và nhấn `Ctrl + F5` $\rightarrow$ Trang web báo lỗi mất kết nối cơ sở dữ liệu (chứng minh container đã bị xóa thật).
 
-4. Lệnh khôi phục tổng thể toàn hệ thống
-Lệnh dọn dẹp chung sau khi kiểm thử xong, đưa toàn bộ hệ sinh thái về cấu hình 8 container chuẩn ban đầu:
+- **Bước 3: Dựng lại container mới từ Docker Volume đã có (Chạy trên Terminal EC2)**
+```bash
+sudo docker compose up -d order-db
+```
 
-Bash
-docker compose up -d --scale product-service=1 --remove-orphans
-docker restart nginx_gateway
-docker compose ps
+- **Bước 4: Kiểm tra phục hồi dữ liệu (Chạy trên Trình duyệt máy tính)**
+Chờ 10 giây cho MySQL khởi động, quay lại `http://13.220.188.139/admin.html` nhấn `Ctrl + F5`.
+*Cách xác minh:* Toàn bộ 17 đơn hàng hiển thị đầy đủ nguyên vẹn mà không cần nạp lại file SQL.
+
+---
+
+## 6. Kịch bản 5: Khả năng tự phục hồi (Self-Healing & Auto-Restart)
+
+Chứng minh chính sách `restart: always` giúp hệ thống tự động hồi sinh các dịch
